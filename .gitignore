@@ -1,0 +1,116 @@
+# Lock-In Responsible - Project-wide .gitignore
+
+# ===================================
+# Backend
+# ===================================
+
+backend/node_modules/
+backend/dist/
+backend/build/
+backend/.env
+backend/.env.local
+backend/dev.db
+backend/dev.db-journal
+backend/logs/
+backend/uploads/
+backend/*.log
+
+# ===================================
+# Firmware
+# ===================================
+
+firmware/.pio/
+firmware/.vscode/
+firmware/include/config.h
+firmware/lib/
+firmware/test/
+firmware/*.bin
+firmware/*.elf
+
+# ===================================
+# Client (future)
+# ===================================
+
+client/node_modules/
+client/dist/
+client/build/
+client/.env
+client/.env.local
+
+# ===================================
+# General
+# ===================================
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*~
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-*
+*.code-workspace
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage
+coverage/
+.nyc_output/
+
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# Build outputs
+dist/
+build/
+*.tgz
+
+# Temporary
+tmp/
+temp/
+*.tmp
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Database
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# Certificates
+*.pem
+*.key
+*.crt
+
+# Archives
+*.zip
+*.tar.gz
+*.rar
+
+# Hardware
+hardware/*.stl.backup
+hardware/*.gcode
