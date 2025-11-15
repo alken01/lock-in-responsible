@@ -14,10 +14,12 @@ export default function Goals() {
   const [selectedGoalId, setSelectedGoalId] = useState<number | null>(null);
   const queryClient = useQueryClient();
 
-  const { data: goals = [], isLoading } = useQuery({
+  const { data: goals = [], isLoading, error } = useQuery({
     queryKey: ['icp-goals'],
     queryFn: icpGoalAPI.list,
   });
+
+  console.log('🎯 Goals Query State:', { goals, isLoading, error });
 
   const createGoalMutation = useMutation({
     mutationFn: async (data: {

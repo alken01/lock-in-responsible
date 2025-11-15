@@ -17,17 +17,20 @@ export const useAuthStore = create<AuthState>((set) => ({
   isLoading: false,
 
   login: async () => {
+    console.log('🚀 AuthStore: Starting login...');
     set({ isLoading: true });
     try {
       await icpClient.login();
       const principal = await icpClient.getPrincipal();
+      console.log('👤 AuthStore: Got principal:', principal?.toString());
       set({
         principal,
         isAuthenticated: true,
         isLoading: false
       });
+      console.log('✅ AuthStore: Login complete, state updated');
     } catch (error) {
-      console.error('Login failed:', error);
+      console.error('❌ AuthStore: Login failed:', error);
       set({ isLoading: false });
       throw error;
     }
@@ -49,17 +52,21 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   checkAuth: async () => {
+    console.log('🔄 AuthStore: Checking authentication...');
     set({ isLoading: true });
     try {
       const isAuth = await icpClient.isAuthenticated();
+      console.log('🔍 AuthStore: checkAuth result:', isAuth);
       if (isAuth) {
         const principal = await icpClient.getPrincipal();
+        console.log('👤 AuthStore: checkAuth got principal:', principal?.toString());
         set({
           principal,
           isAuthenticated: true,
           isLoading: false
         });
       } else {
+        console.log('❌ AuthStore: Not authenticated');
         set({
           principal: null,
           isAuthenticated: false,
@@ -67,7 +74,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         });
       }
     } catch (error) {
-      console.error('Auth check failed:', error);
+      console.error('❌ AuthStore: Auth check failed:', error);
       set({
         principal: null,
         isAuthenticated: false,

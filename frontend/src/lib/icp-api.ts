@@ -114,17 +114,30 @@ class ICPClient {
       ? import.meta.env.VITE_ICP_HOST_LOCAL
       : import.meta.env.VITE_ICP_HOST_MAINNET;
 
-    this.agent = new HttpAgent({ host });
+    console.log('🌐 Initializing agent with host:', host);
+
+    // Create agent with query signature verification disabled for local dev
+    this.agent = await HttpAgent.create({
+      host,
+      verifyQuerySignatures: !isLocal, // Disable for local to avoid cert issues with mainnet II
+    });
 
     // Fetch root key for local development
     if (isLocal) {
-      await this.agent.fetchRootKey().catch(console.error);
+      try {
+        console.log('🔑 Fetching root key from local replica...');
+        await this.agent.fetchRootKey();
+        console.log('✅ Root key fetched successfully');
+      } catch (error) {
+        console.error('❌ Failed to fetch root key:', error);
+        throw new Error('Failed to connect to local ICP replica. Make sure dfx is running.');
+      }
     }
 
     this.createActor();
   }
 
-  private createActor() {
+  private async createActor() {
     if (!this.agent) return;
 
     const identity = this.authClient?.getIdentity();
@@ -134,20 +147,37 @@ class ICPClient {
         ? import.meta.env.VITE_ICP_HOST_LOCAL
         : import.meta.env.VITE_ICP_HOST_MAINNET;
 
-      this.agent = new HttpAgent({
+      console.log('🔄 Recreating agent with authenticated identity');
+
+      // Create agent with identity
+      // For local development with mainnet II, we need to disable query signature verification
+      // to avoid certificate verification errors
+      this.agent = await HttpAgent.create({
         host,
         identity,
+        verifyQuerySignatures: !isLocal, // Disable verification for local dev
       });
 
-      if (import.meta.env.MODE === 'development') {
-        this.agent.fetchRootKey().catch(console.error);
+      // Fetch root key for local development ONLY
+      // This allows the agent to trust the local replica
+      if (isLocal && this.agent) {
+        try {
+          console.log('🔑 Fetching root key for local replica...');
+          await this.agent.fetchRootKey();
+          console.log('✅ Root key fetched for authenticated agent');
+        } catch (err) {
+          console.error('❌ Failed to fetch root key:', err);
+        }
       }
     }
 
-    this.actor = Actor.createActor(idlFactory, {
-      agent: this.agent,
-      canisterId: CANISTER_ID,
-    });
+    if (this.agent) {
+      console.log('🎭 Creating actor for canister:', CANISTER_ID);
+      this.actor = Actor.createActor(idlFactory, {
+        agent: this.agent,
+        canisterId: CANISTER_ID,
+      });
+    }
   }
 
   async login() {
@@ -159,14 +189,19 @@ class ICPClient {
         ? import.meta.env.VITE_II_PROVIDER_LOCAL
         : import.meta.env.VITE_II_PROVIDER_MAINNET;
 
+      console.log('🔐 Starting login with provider:', identityProvider);
+
       this.authClient?.login({
         identityProvider,
-        onSuccess: () => {
-          this.createActor();
+        onSuccess: async () => {
+          console.log('✅ Login callback triggered - success!');
+          await this.createActor();
+          const isAuth = await this.isAuthenticated();
+          console.log('🔍 Authentication status after login:', isAuth);
           resolve(true);
         },
         onError: (error) => {
-          console.error('Login failed:', error);
+          console.error('❌ Login failed:', error);
           reject(error);
         },
       });
@@ -180,7 +215,9 @@ class ICPClient {
 
   async isAuthenticated(): Promise<boolean> {
     if (!this.authClient) await this.init();
-    return await this.authClient!.isAuthenticated();
+    const isAuth = await this.authClient!.isAuthenticated();
+    console.log('🔍 isAuthenticated check:', isAuth);
+    return isAuth;
   }
 
   async getPrincipal(): Promise<Principal | null> {
@@ -260,8 +297,10 @@ export const icpGoalAPI = {
   },
 
   list: async () => {
+    console.log('📋 Fetching goals from canister...');
     const goals = await icpClient.getMyGoals();
-    return goals.map(g => ({
+    console.log('📋 Raw goals from canister:', goals);
+    const mapped = goals.map(g => ({
       id: Number(g.id),
       title: g.title,
       description: g.description,
@@ -272,6 +311,8 @@ export const icpGoalAPI = {
       proof: g.proof.length > 0 ? g.proof[0] : null,
       tokensReward: Number(g.tokensReward),
     }));
+    console.log('📋 Mapped goals:', mapped);
+    return mapped;
   },
 
   submitProof: async (goalId: number, proof: string) => {
