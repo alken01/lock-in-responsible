@@ -2,7 +2,8 @@ import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import { AuthService } from '../services/auth.service';
 import { sendSuccess } from '../utils/response';
-import { ValidationError } from '../utils/errors';
+import { ValidationError, UnauthorizedError } from '../utils/errors';
+import { OAuth2Client } from 'google-auth-library';
 
 export class AuthController {
   static async register(req: AuthRequest, res: Response, next: NextFunction) {
@@ -54,6 +55,22 @@ export class AuthController {
       const result = await AuthService.refreshAccessToken(refreshToken);
 
       return sendSuccess(res, result, 'Token refreshed successfully');
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async googleLogin(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const { credential } = req.body;
+
+      if (!credential) {
+        throw new ValidationError('Google credential is required');
+      }
+
+      const result = await AuthService.googleLogin(credential);
+
+      return sendSuccess(res, result, 'Login successful');
     } catch (error) {
       next(error);
     }

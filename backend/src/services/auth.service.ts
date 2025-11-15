@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
 import config from '../config';
 import { UnauthorizedError, ConflictError } from '../utils/errors';
+import { OAuth2Client } from 'google-auth-library';
 
 const prisma = new PrismaClient();
 
@@ -98,6 +99,56 @@ export class AuthService {
 
     if (!isValidPassword) {
       throw new UnauthorizedError('Invalid email or password');
+    }
+
+    // Generate tokens
+    const tokens = await this.createTokenPair(user.id, user.email, user.name);
+
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+      },
+      tokens,
+    };
+  }
+
+  static async googleLogin(credential: string) {
+    // Verify Google token
+    const client = new OAuth2Client(config.google.clientId);
+
+    let payload;
+    try {
+      const ticket = await client.verifyIdToken({
+        idToken: credential,
+        audience: config.google.clientId,
+      });
+      payload = ticket.getPayload();
+    } catch (error) {
+      throw new UnauthorizedError('Invalid Google credential');
+    }
+
+    if (!payload || !payload.email) {
+      throw new UnauthorizedError('Invalid Google credential');
+    }
+
+    const { email, name } = payload;
+
+    // Find or create user
+    let user = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      // Create new user for OAuth (no password)
+      user = await prisma.user.create({
+        data: {
+          email,
+          name: name || email.split('@')[0],
+          password: '', // No password for OAuth users
+        },
+      });
     }
 
     // Generate tokens

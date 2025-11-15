@@ -34,6 +34,11 @@ export const config = {
     },
   },
 
+  // Google OAuth
+  google: {
+    clientId: process.env.GOOGLE_CLIENT_ID || '',
+  },
+
   // GitHub OAuth
   github: {
     clientId: process.env.GITHUB_CLIENT_ID || '',
