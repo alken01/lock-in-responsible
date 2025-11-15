@@ -8,6 +8,7 @@ import { Label } from '../components/ui/label';
 import { Plus, Target, CheckCircle2, Circle, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Goal } from '../types';
+import { ICPIntegration } from '../components/ICPIntegration';
 
 export default function Goals() {
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -60,7 +61,9 @@ export default function Goals() {
   const completedGoals = todayGoals.filter((g: Goal) => g.status === 'completed');
 
   return (
-    <div className="space-y-6">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Main Content */}
+      <div className="lg:col-span-2 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -233,6 +236,14 @@ export default function Goals() {
           ))}
         </div>
       )}
+      </div>
+
+      {/* ICP Integration Sidebar */}
+      <div className="lg:col-span-1">
+        <div className="sticky top-20">
+          <ICPIntegration />
+        </div>
+      </div>
     </div>
   );
 }

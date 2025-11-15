@@ -6,6 +6,9 @@ Lock your phone (or anything valuable) in a box. Complete your daily goals. Get 
 
 [![Status](https://img.shields.io/badge/status-MVP%20Complete-brightgreen)]()
 [![License](https://img.shields.io/badge/license-MIT-blue)]()
+[![ICP](https://img.shields.io/badge/Built%20on-Internet%20Computer-blue)](https://internetcomputer.org)
+
+> **🚀 NEW:** [ICP Hackathon Edition](ICP_HACKATHON.md) - Now with blockchain-powered accountability, Internet Identity login, and on-chain token rewards!
 
 ---
 

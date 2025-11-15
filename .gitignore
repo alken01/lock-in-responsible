@@ -114,3 +114,14 @@ temp/
 # Hardware
 hardware/*.stl.backup
 hardware/*.gcode
+
+# ===================================
+# ICP (Internet Computer)
+# ===================================
+
+.dfx/
+canister_ids.json
+.env.icp
+frontend/node_modules/
+frontend/dist/
+frontend/.env.icp
