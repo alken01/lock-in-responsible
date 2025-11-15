@@ -1,22 +1,6 @@
 # Lock-In Responsible - Project-wide .gitignore
 
 # ===================================
-# Backend (Node.js + Express)
-# ===================================
-
-backend/node_modules/
-backend/dist/
-backend/build/
-backend/.env
-backend/.env.local
-backend/dev.db
-backend/dev.db-journal
-backend/logs/
-backend/uploads/
-backend/*.log
-backend/.claude
-
-# ===================================
 # Frontend (React + Vite)
 # ===================================
 

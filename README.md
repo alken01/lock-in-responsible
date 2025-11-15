@@ -58,7 +58,7 @@ Internet Identity provides passwordless, privacy-preserving authentication. No p
    ↓
 2. Goal stored on ICP (immutable)
    ↓
-3. User submits proof (screenshot + text)
+3. User submits proof (text description)
    ↓
 4. ICP canister selects 5 random validators
    ↓
@@ -83,10 +83,9 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed system design.
 |-----------|------------|
 | **Smart Contract** | Motoko (ICP) |
 | **Frontend** | React + TypeScript + Vite |
-| **Backend** | Node.js + Express (for heavy processing) |
 | **Validators** | Node.js + Ollama/OpenAI/Anthropic |
-| **Auth** | Internet Identity, Google OAuth |
-| **Storage** | ICP stable memory, S3/IPFS for proofs |
+| **Auth** | Internet Identity |
+| **Storage** | ICP stable memory |
 
 ---
 
@@ -100,10 +99,7 @@ lock-in-responsible/
 ├── frontend/                # React web app
 │   ├── src/components/      # UI components
 │   ├── src/pages/           # Goals, History, Settings
-│   └── src/lib/icp-api.ts   # ICP SDK integration
-│
-├── backend/                 # Node.js helper service
-│   └── src/                 # File uploads, LLM proxy, GitHub API
+│   └── src/lib/icp-api.ts   # Direct ICP communication
 │
 ├── validator-node/          # Validator daemon (runs on validator's machine)
 │   └── src/                 # Polls ICP, verifies proofs, submits verdicts
@@ -140,18 +136,7 @@ npm install
 npm run dev
 ```
 
-### 3. Run Backend (Optional)
-
-```bash
-cd backend
-cp .env.example .env
-# Edit .env with your configuration
-npm install
-npm run db:migrate
-npm run dev
-```
-
-### 4. Run Validator Node (Optional - for validators)
+### 3. Run Validator Node (Optional - for validators)
 
 See [validator-node/README.md](validator-node/README.md) for validator setup.
 

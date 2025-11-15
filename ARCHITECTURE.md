@@ -4,7 +4,7 @@
 
 ## Overview
 
-Lock-In Responsible uses a hybrid blockchain architecture combining ICP (Internet Computer) for decentralized goal storage and token rewards, with a distributed validator network for AI-powered verification.
+Lock-In Responsible uses a pure ICP blockchain architecture for decentralized goal storage and token rewards, with a distributed validator network for AI-powered verification.
 
 ## System Architecture
 
@@ -13,28 +13,29 @@ Lock-In Responsible uses a hybrid blockchain architecture combining ICP (Interne
 │                    FRONTEND (React)                          │
 │  - Internet Identity Auth                                   │
 │  - Create Goals (Direct to ICP)                            │
-│  - Submit Proofs (Via Backend + ICP)                       │
+│  - Submit Proofs (Direct to ICP)                           │
 │  - View Leaderboard (Direct from ICP)                      │
 └─────────────────────────────────────────────────────────────┘
-         │                                    │
-         │ Direct ICP Calls                  │ Backend API
-         │ (Most operations)                  │ (Heavy processing)
-         ↓                                    ↓
-┌──────────────────────┐          ┌──────────────────────┐
-│   ICP CANISTER       │          │   BACKEND (Node.js)  │
-│   (Motoko)           │←─────────│                      │
-│                      │  Callback│  - File uploads      │
-│ - Goal storage       │          │  - LLM proxy         │
-│ - Token rewards      │          │  - GitHub API        │
-│ - Validator registry │          │                      │
-│ - Consensus logic    │          └──────────────────────┘
-│ - Leaderboard        │
-└──────────────────────┘
-         │
-         │ Broadcasts
-         │ Verification
-         │ Requests
-         ↓
+                           │
+                           │ Direct ICP Calls
+                           │ (All operations)
+                           ↓
+                 ┌──────────────────────┐
+                 │   ICP CANISTER       │
+                 │   (Motoko)           │
+                 │                      │
+                 │ - Goal storage       │
+                 │ - Proof storage      │
+                 │ - Token rewards      │
+                 │ - Validator registry │
+                 │ - Consensus logic    │
+                 │ - Leaderboard        │
+                 └──────────────────────┘
+                           │
+                           │ Broadcasts
+                           │ Verification
+                           │ Requests
+                           ↓
 ┌────────────────────────────────────────────────────────┐
 │           VALIDATOR NETWORK (Distributed)              │
 │                                                        │
@@ -68,9 +69,9 @@ Result: Goal stored on blockchain, cannot be deleted
 
 ```
 1. User submits proof
-   Frontend → Backend
-   └─ Upload screenshot to storage
-   └─ Create verification request → ICP Canister
+   Frontend → ICP Canister
+   └─ Submit text proof
+   └─ Create verification request
 
 2. ICP selects 5 random validators
    ICP Canister → Validator Network
@@ -78,7 +79,7 @@ Result: Goal stored on blockchain, cannot be deleted
 
 3. Validators verify
    Each Validator:
-   ├─ Download proof
+   ├─ Receive proof text from ICP
    ├─ Run LLM analysis
    └─ Submit verdict to ICP
       {
@@ -100,12 +101,10 @@ Result: Goal stored on blockchain, cannot be deleted
 ### 1. Frontend (`/frontend`)
 - **Tech**: React + TypeScript + Vite
 - **Auth**: Internet Identity (ICP)
-- **Communication**:
-  - Direct ICP calls for goals, tokens, leaderboard
-  - Backend API for proof submission
+- **Communication**: Direct ICP calls for all operations
 - **Features**:
   - Create goals
-  - Submit proofs
+  - Submit text proofs
   - View verification status
   - Check token balance
   - View leaderboard
@@ -131,23 +130,7 @@ getPendingRequests()            // Validators poll for work
 calculateConsensus()            // Compute majority + rewards
 ```
 
-### 3. Backend (`/backend`)
-- **Tech**: Node.js + Express + Prisma
-- **Purpose**: Heavy processing & integrations
-- **Responsibilities**:
-  - File/image uploads (screenshots)
-  - Proof storage (S3/IPFS)
-  - LLM API proxy (optional)
-  - GitHub API integration
-  - Email notifications
-  - Analytics
-
-**When Used**:
-- Only for operations that need processing
-- NOT used for reading goals/tokens
-- Acts as helper service to ICP
-
-### 4. Validator Node (`/validator-node`)
+### 3. Validator Node (`/validator-node`)
 - **Tech**: Node.js + LLM libraries
 - **Purpose**: Decentralized verification
 - **Runs**: On validator's own infrastructure
