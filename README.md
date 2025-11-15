@@ -2,7 +2,7 @@
 
 **Decentralized goal accountability with AI-powered verification**
 
-Stop procrastinating. Commit your goals to the blockchain. Get verified by a decentralized network. Earn rewards for discipline.
+Commit your goals to the blockchain. Get verified by a decentralized AI network. Earn rewards for discipline.
 
 [![ICP](https://img.shields.io/badge/Built%20on-Internet%20Computer-blue)](https://internetcomputer.org)
 [![License](https://img.shields.io/badge/license-MIT-blue)]()
@@ -22,36 +22,202 @@ Lock-In Responsible helps you achieve your goals through **cryptographic commitm
 **Blockchain-immutable goals + Decentralized AI validation = Real accountability**
 
 1. **Create a goal** → Stored on ICP blockchain (can't delete)
-2. **Complete it** → Submit proof (screenshot + description)
+2. **Complete it** → Submit text proof
 3. **Get verified** → 5 random AI validators check your proof
 4. **Earn rewards** → Receive 10 tokens if 3/5 validators approve
 5. **Build streaks** → Compete on the global leaderboard
 
 ---
 
-## Key Features
+## 🚀 Quick Start (5 minutes)
 
-### Immutable Commitment
-Goals are stored on the Internet Computer blockchain. You **cannot** delete them, edit them, or pretend they never existed. Public accountability works.
+### Prerequisites
 
-### Decentralized AI Verification
-No single point of failure. When you submit proof:
-- ICP canister selects 5 random validators from the network
-- Each validator runs an LLM (local or API) to analyze your proof
-- 3/5 must agree for approval (majority consensus)
-- Validators earn fees for correct verdicts, lose reputation for wrong ones
+- Node.js 18+ ([Download](https://nodejs.org))
+- DFX SDK ([Install ICP SDK](https://internetcomputer.org/docs/current/developer-docs/getting-started/install/))
 
-### Economic Security
-- **Users**: Pay $0.50 verification fee, earn 10 tokens for completion
-- **Validators**: Stake 100 tokens, earn $0.10-0.50 per verification
-- **Incentive alignment**: Honest validators get rewarded, dishonest ones get slashed
+### Step 1: Install DFX (if not installed)
 
-### Privacy-Preserving Auth
-Internet Identity provides passwordless, privacy-preserving authentication. No passwords, no email, no personal data storage.
+```bash
+# Install the ICP SDK
+sh -ci "$(curl -fsSL https://internetcomputer.org/install.sh)"
+
+# Verify installation
+dfx --version
+```
+
+### Step 2: Start Local ICP Network
+
+```bash
+# Start the local replica (blockchain node)
+dfx start --clean --background
+
+# This will run on http://localhost:4943
+# Keep this running in the background
+```
+
+### Step 3: Deploy the Canister
+
+```bash
+# Deploy the smart contract to local network
+dfx deploy lock_in_backend
+
+# You'll see output like:
+# Deployed canisters.
+# URLs:
+#   Backend canister via Candid interface:
+#     lock_in_backend: http://127.0.0.1:4943/?canisterId=XXXXX
+```
+
+### Step 4: Update Frontend Configuration
+
+```bash
+# Get your canister ID
+dfx canister id lock_in_backend
+
+# Copy the output (e.g., rrkah-fqaaa-aaaaa-aaaaq-cai)
+
+# Update frontend/.env with your canister ID
+cd frontend
+echo "VITE_ICP_CANISTER_ID=$(dfx canister id lock_in_backend)" > .env
+echo "VITE_ICP_NETWORK=development" >> .env
+echo 'VITE_APP_NAME="Lock-In Responsible"' >> .env
+```
+
+### Step 5: Install Frontend Dependencies
+
+```bash
+# Still in frontend/
+npm install
+```
+
+### Step 6: Run the Frontend
+
+```bash
+npm run dev
+
+# Frontend will be available at http://localhost:5173
+```
+
+### Step 7: Login & Test
+
+1. Open http://localhost:5173
+2. Click **"Login with Internet Identity"**
+3. A popup will open for local Internet Identity
+4. Click **"Create Internet Identity"**
+5. Follow the prompts (you can skip adding recovery methods for local testing)
+6. You'll be redirected back and logged in!
+7. Try creating a goal and submitting proof
 
 ---
 
-## How It Works
+## 📖 Full Development Setup
+
+### Project Structure
+
+```
+lock-in-responsible/
+├── canister/           # ICP smart contract (Motoko)
+│   └── main.mo        # Goals, validators, consensus, tokens
+├── frontend/          # React web app
+│   └── src/          # Direct ICP communication
+├── validator-node/    # Validator daemon (for validators)
+└── dfx.json          # ICP configuration
+```
+
+### Running Everything
+
+```bash
+# Terminal 1: Start ICP local network
+dfx start --clean
+
+# Terminal 2: Deploy canister & run frontend
+dfx deploy lock_in_backend
+cd frontend && npm install && npm run dev
+
+# Terminal 3 (Optional): Run a validator node
+cd validator-node && npm install && npm start
+```
+
+### Useful Commands
+
+```bash
+# Check if dfx is running
+dfx ping
+
+# View deployed canisters
+dfx canister id lock_in_backend
+
+# Stop the local network
+dfx stop
+
+# View canister logs
+dfx canister logs lock_in_backend
+
+# Redeploy after code changes
+dfx deploy lock_in_backend
+
+# Reset everything (CAREFUL: deletes all data)
+dfx start --clean --background
+dfx deploy
+```
+
+---
+
+## 🔧 Troubleshooting
+
+### "Login not working"
+**Problem**: DFX not running or canister not deployed
+
+**Solution**:
+```bash
+# 1. Check if dfx is running
+dfx ping
+
+# 2. If not, start it
+dfx start --background
+
+# 3. Deploy the canister
+dfx deploy lock_in_backend
+
+# 4. Update frontend/.env with canister ID
+echo "VITE_ICP_CANISTER_ID=$(dfx canister id lock_in_backend)" > frontend/.env
+echo "VITE_ICP_NETWORK=development" >> frontend/.env
+
+# 5. Restart frontend
+cd frontend && npm run dev
+```
+
+### "Cannot connect to canister"
+**Problem**: Wrong canister ID in .env
+
+**Solution**:
+```bash
+# Get the correct ID
+dfx canister id lock_in_backend
+
+# Update frontend/.env manually
+# VITE_ICP_CANISTER_ID=<your-canister-id>
+```
+
+### "Internet Identity popup doesn't open"
+**Problem**: Browser blocking popups
+
+**Solution**: Allow popups for localhost:5173 in your browser settings
+
+### "Module not found" errors
+**Problem**: Dependencies not installed
+
+**Solution**:
+```bash
+cd frontend
+rm -rf node_modules package-lock.json
+npm install
+```
+
+---
+
+## 🎯 How It Works
 
 ```
 1. User creates goal
@@ -77,7 +243,7 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed system design.
 
 ---
 
-## Technology Stack
+## 💡 Technology Stack
 
 | Component | Technology |
 |-----------|------------|
@@ -89,60 +255,7 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed system design.
 
 ---
 
-## Project Structure
-
-```
-lock-in-responsible/
-├── canister/                # ICP canister (Motoko smart contract)
-│   └── main.mo              # Goals, validators, consensus, tokens
-│
-├── frontend/                # React web app
-│   ├── src/components/      # UI components
-│   ├── src/pages/           # Goals, History, Settings
-│   └── src/lib/icp-api.ts   # Direct ICP communication
-│
-├── validator-node/          # Validator daemon (runs on validator's machine)
-│   └── src/                 # Polls ICP, verifies proofs, submits verdicts
-│
-├── ARCHITECTURE.md          # Detailed system architecture
-└── README.md                # This file
-```
-
----
-
-## Quick Start
-
-### 1. Deploy ICP Canister
-
-```bash
-# Install ICP SDK
-sh -ci "$(curl -fsSL https://internetcomputer.org/install.sh)"
-
-# Start local network
-dfx start --background
-
-# Deploy canister
-dfx deploy lock_in_backend
-
-# Get canister ID
-dfx canister id lock_in_backend
-```
-
-### 2. Run Frontend
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-### 3. Run Validator Node (Optional - for validators)
-
-See [validator-node/README.md](validator-node/README.md) for validator setup.
-
----
-
-## Use Cases
+## 📝 Use Cases
 
 - **Writing**: "Write 1000 words today"
 - **Coding**: "Commit code for 30 minutes"
@@ -152,7 +265,36 @@ See [validator-node/README.md](validator-node/README.md) for validator setup.
 
 ---
 
-## Economics
+## 🌐 Deploying to Mainnet
+
+### Prerequisites
+- ICP cycles (fuel for canister operations)
+- Get free cycles: https://faucet.dfinity.org
+
+### Deploy to IC Mainnet
+
+```bash
+# 1. Deploy to mainnet
+dfx deploy --network ic lock_in_backend
+
+# 2. Get your mainnet canister ID
+dfx canister id lock_in_backend --network ic
+
+# 3. Update frontend/.env for production
+VITE_ICP_CANISTER_ID=<mainnet-canister-id>
+VITE_ICP_NETWORK=production
+
+# 4. Build frontend
+cd frontend
+npm run build
+
+# 5. Deploy frontend (e.g., to Vercel)
+vercel deploy
+```
+
+---
+
+## 💰 Economics
 
 ### For Users
 - **Create goal**: Free (ICP cycles)
@@ -166,23 +308,16 @@ See [validator-node/README.md](validator-node/README.md) for validator setup.
 - **Requirements**: 99%+ uptime
 - **Slashing**: Wrong verdicts = -reputation
 
-### Token Flow
-```
-User pays $0.50
-    ↓
-ICP holds fee
-    ↓
-5 validators verify
-    ↓
-3/5 agree = approved
-    ↓
-Correct validators split fee ($0.16 each)
-User earns 10 tokens
-```
+---
+
+## 📚 Documentation
+
+- [ARCHITECTURE.md](ARCHITECTURE.md) - Complete system architecture
+- [validator-node/README.md](validator-node/README.md) - Run a validator node
 
 ---
 
-## Why This Works
+## 🤝 Why This Works
 
 ### Psychological Principles
 1. **Commitment Device**: Public goals you can't delete
@@ -198,20 +333,13 @@ User earns 10 tokens
 
 ---
 
-## Documentation
-
-- [ARCHITECTURE.md](ARCHITECTURE.md) - Complete system architecture
-- [validator-node/README.md](validator-node/README.md) - Run a validator node
-
----
-
-## License
+## 📄 License
 
 MIT License
 
 ---
 
-## Built With
+## 🙏 Built With
 
 - Internet Computer Protocol (DFINITY)
 - OpenAI, Anthropic, Ollama (AI verification)
