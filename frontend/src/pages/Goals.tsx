@@ -6,8 +6,7 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Plus, Target, CheckCircle2, Circle, Trash2 } from 'lucide-react';
-import { format } from 'date-fns';
-import { Goal } from '../types';
+import type { Goal } from '../types';
 import { ICPIntegration } from '../components/ICPIntegration';
 
 export default function Goals() {
@@ -51,7 +50,6 @@ export default function Goals() {
     return new Date(goal.dueDate).toDateString() === new Date().toDateString();
   });
 
-  const pendingGoals = todayGoals.filter((g: Goal) => g.status === 'pending');
   const completedGoals = todayGoals.filter((g: Goal) => g.status === 'completed');
 
   return (

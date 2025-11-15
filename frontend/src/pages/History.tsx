@@ -3,7 +3,7 @@ import { goalAPI } from '../lib/api';
 import { Card, CardContent } from '../components/ui/card';
 import { History as HistoryIcon, CheckCircle2, XCircle, Clock } from 'lucide-react';
 import { format } from 'date-fns';
-import { Goal } from '../types';
+import type { Goal } from '../types';
 
 export default function History() {
   const { data: goals = [], isLoading } = useQuery({
