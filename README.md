@@ -8,6 +8,8 @@ Commit to your goals on-chain. Submit proof when complete. Earn tokens. Build st
 [![License](https://img.shields.io/badge/license-MIT-blue)]()
 [![ICP](https://img.shields.io/badge/Built%20on-Internet%20Computer-blue)](https://internetcomputer.org)
 
+> **🚀 NEW:** [ICP Hackathon Edition](ICP_HACKATHON.md) - Now with blockchain-powered accountability, Internet Identity login, and on-chain token rewards!
+
 ---
 
 ## 🎯 What Is This?
