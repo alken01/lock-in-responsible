@@ -56,10 +56,10 @@ actor LockInResponsible {
 
   // State
   private stable var nextGoalId: Nat = 0;
-  private var goals = HashMap.HashMap<GoalId, Goal>(0, Nat.equal, Hash.hash);
-  private var userGoals = HashMap.HashMap<UserId, [GoalId]>(0, Principal.equal, Principal.hash);
-  private var userTokens = HashMap.HashMap<UserId, Nat>(0, Principal.equal, Principal.hash);
-  private var userStats = HashMap.HashMap<UserId, UserStats>(0, Principal.equal, Principal.hash);
+  private transient var goals = HashMap.HashMap<GoalId, Goal>(0, Nat.equal, Nat.hash);
+  private transient var userGoals = HashMap.HashMap<UserId, [GoalId]>(0, Principal.equal, Principal.hash);
+  private transient var userTokens = HashMap.HashMap<UserId, Nat>(0, Principal.equal, Principal.hash);
+  private transient var userStats = HashMap.HashMap<UserId, UserStats>(0, Principal.equal, Principal.hash);
 
   // Stable storage for upgrades
   private stable var goalsEntries : [(GoalId, Goal)] = [];
@@ -75,7 +75,7 @@ actor LockInResponsible {
   };
 
   system func postupgrade() {
-    goals := HashMap.fromIter<GoalId, Goal>(goalsEntries.vals(), 0, Nat.equal, Hash.hash);
+    goals := HashMap.fromIter<GoalId, Goal>(goalsEntries.vals(), 0, Nat.equal, Nat.hash);
     userGoals := HashMap.fromIter<UserId, [GoalId]>(userGoalsEntries.vals(), 0, Principal.equal, Principal.hash);
     userTokens := HashMap.fromIter<UserId, Nat>(userTokensEntries.vals(), 0, Principal.equal, Principal.hash);
     userStats := HashMap.fromIter<UserId, UserStats>(userStatsEntries.vals(), 0, Principal.equal, Principal.hash);
