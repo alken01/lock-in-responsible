@@ -6,7 +6,7 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Smartphone, Plus, Unlock, Wifi, WifiOff, Battery } from 'lucide-react';
-import { Device } from '../types';
+import type { Device } from '../types';
 
 export default function Devices() {
   const [showPairForm, setShowPairForm] = useState(false);
