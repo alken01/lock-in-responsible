@@ -2,20 +2,24 @@ import { Actor, HttpAgent } from '@dfinity/agent';
 import { AuthClient } from '@dfinity/auth-client';
 import { Principal } from '@dfinity/principal';
 
-// Canister ID (will be set after deployment)
-const getCanisterId = () => {
-  const network = import.meta.env.VITE_ICP_NETWORK || 'development';
+// Network configuration - single source of truth
+const NETWORK = import.meta.env.VITE_NETWORK || 'local'; // 'local' or 'mainnet'
+const IS_LOCAL = NETWORK === 'local';
 
-  if (network === 'development') {
-    // Local development
-    return import.meta.env.VITE_ICP_CANISTER_ID_LOCAL || import.meta.env.VITE_ICP_CANISTER_ID;
-  } else {
-    // Production - uses mainnet canister ID
-    return import.meta.env.VITE_ICP_CANISTER_ID;
-  }
-};
+// Canister ID based on network
+const CANISTER_ID = IS_LOCAL
+  ? import.meta.env.VITE_LOCAL_CANISTER_ID
+  : import.meta.env.VITE_MAINNET_CANISTER_ID;
 
-const CANISTER_ID = getCanisterId();
+// ICP Host based on network
+const ICP_HOST = IS_LOCAL
+  ? import.meta.env.VITE_LOCAL_HOST
+  : import.meta.env.VITE_MAINNET_HOST;
+
+// Internet Identity Provider based on network
+const II_PROVIDER = IS_LOCAL
+  ? import.meta.env.VITE_LOCAL_II_PROVIDER
+  : import.meta.env.VITE_MAINNET_II_PROVIDER;
 
 // IDL (Interface Definition Language) for the canister
 const idlFactory = ({ IDL }: any) => {
@@ -113,22 +117,16 @@ class ICPClient {
   async init() {
     this.authClient = await AuthClient.create();
 
-    // Determine if local or mainnet
-    const isLocal = import.meta.env.MODE === 'development';
-    const host = isLocal
-      ? import.meta.env.VITE_ICP_HOST_LOCAL
-      : import.meta.env.VITE_ICP_HOST_MAINNET;
-
-    console.log('🌐 Initializing agent with host:', host);
+    console.log(`🌐 Initializing agent - Network: ${NETWORK}, Host: ${ICP_HOST}`);
 
     // Create agent with query signature verification disabled for local dev
     this.agent = await HttpAgent.create({
-      host,
-      verifyQuerySignatures: !isLocal, // Disable for local to avoid cert issues with mainnet II
+      host: ICP_HOST,
+      verifyQuerySignatures: !IS_LOCAL, // Disable for local to avoid cert issues
     });
 
     // Fetch root key for local development
-    if (isLocal) {
+    if (IS_LOCAL) {
       try {
         console.log('🔑 Fetching root key from local replica...');
         await this.agent.fetchRootKey();
@@ -147,25 +145,17 @@ class ICPClient {
 
     const identity = this.authClient?.getIdentity();
     if (identity) {
-      const isLocal = import.meta.env.MODE === 'development';
-      const host = isLocal
-        ? import.meta.env.VITE_ICP_HOST_LOCAL
-        : import.meta.env.VITE_ICP_HOST_MAINNET;
-
       console.log('🔄 Recreating agent with authenticated identity');
 
       // Create agent with identity
-      // For local development with mainnet II, we need to disable query signature verification
-      // to avoid certificate verification errors
       this.agent = await HttpAgent.create({
-        host,
+        host: ICP_HOST,
         identity,
-        verifyQuerySignatures: !isLocal, // Disable verification for local dev
+        verifyQuerySignatures: !IS_LOCAL, // Disable verification for local dev
       });
 
       // Fetch root key for local development ONLY
-      // This allows the agent to trust the local replica
-      if (isLocal && this.agent) {
+      if (IS_LOCAL && this.agent) {
         try {
           console.log('🔑 Fetching root key for local replica...');
           await this.agent.fetchRootKey();
@@ -189,15 +179,10 @@ class ICPClient {
     if (!this.authClient) await this.init();
 
     return new Promise<boolean>((resolve, reject) => {
-      const isLocal = import.meta.env.MODE === 'development';
-      const identityProvider = isLocal
-        ? import.meta.env.VITE_II_PROVIDER_LOCAL
-        : import.meta.env.VITE_II_PROVIDER_MAINNET;
-
-      console.log('🔐 Starting login with provider:', identityProvider);
+      console.log('🔐 Starting login with provider:', II_PROVIDER);
 
       this.authClient?.login({
-        identityProvider,
+        identityProvider: II_PROVIDER,
         onSuccess: async () => {
           console.log('✅ Login callback triggered - success!');
           await this.createActor();
