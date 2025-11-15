@@ -27,7 +27,6 @@ model User {
   longestStreak       Int @default(0)
 
   // Relationships
-  devices       Device[]
   goals         Goal[]
   verifications Verification[]
   integrations  Integration[]
@@ -52,36 +51,6 @@ model RefreshToken {
   @@index([token])
 }
 
-// Device model (ESP32 locks)
-model Device {
-  id              String    @id @default(cuid())
-  name            String
-  macAddress      String    @unique
-  apiKey          String    @unique
-  userId          String
-  status          String    @default("offline") // online, offline, error
-  lastSeen        DateTime?
-  firmwareVersion String    @default("1.0.0")
-  batteryLevel    Int?
-  wifiRssi        Int?
-  lockState       String    @default("locked") // locked, unlocked
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-
-  // Settings
-  settings Json @default("{\"autoLockDelay\":10,\"unlockDuration\":5,\"buzzerEnabled\":true}")
-
-  // Relationships
-  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  goals       Goal[]
-  unlockCodes UnlockCode[]
-  deviceLogs  DeviceLog[]
-
-  @@index([userId])
-  @@index([macAddress])
-  @@index([apiKey])
-}
-
 // Goal model
 model Goal {
   id          String    @id @default(cuid())
@@ -94,7 +63,6 @@ model Goal {
   dueDate     DateTime?
   completedAt DateTime?
   userId      String
-  deviceId    String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
@@ -104,11 +72,9 @@ model Goal {
 
   // Relationships
   user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  device        Device?        @relation(fields: [deviceId], references: [id], onDelete: SetNull)
   verifications Verification[]
 
   @@index([userId])
-  @@index([deviceId])
   @@index([status])
   @@index([dueDate])
 }
@@ -141,23 +107,6 @@ model Verification {
   @@index([status])
 }
 
-// Unlock code model
-model UnlockCode {
-  id        String    @id @default(cuid())
-  code      String
-  deviceId  String
-  expiresAt DateTime
-  usedAt    DateTime?
-  createdAt DateTime  @default(now())
-
-  // Relationships
-  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
-
-  @@index([deviceId])
-  @@index([code])
-  @@index([expiresAt])
-}
-
 // Integration model (GitHub, etc.)
 model Integration {
   id          String   @id @default(cuid())
@@ -177,22 +126,6 @@ model Integration {
   @@unique([userId, provider])
   @@index([userId])
   @@index([provider])
-}
-
-// Device log model
-model DeviceLog {
-  id        String   @id @default(cuid())
-  deviceId  String
-  eventType String // heartbeat, unlock_success, unlock_fail, error, etc.
-  metadata  Json     @default("{}")
-  timestamp DateTime @default(now())
-
-  // Relationships
-  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
-
-  @@index([deviceId])
-  @@index([eventType])
-  @@index([timestamp])
 }
 
 // Audit log model

@@ -5,7 +5,6 @@ import { useAuthStore } from './store/authStore';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Goals from './pages/Goals';
-import Devices from './pages/Devices';
 import History from './pages/History';
 import Settings from './pages/Settings';
 
@@ -43,7 +42,6 @@ function App() {
             }
           >
             <Route index element={<Goals />} />
-            <Route path="devices" element={<Devices />} />
             <Route path="history" element={<History />} />
             <Route path="settings" element={<Settings />} />
           </Route>
