@@ -1,56 +1,78 @@
 import { create } from 'zustand';
-import type { User } from '../types';
-import { authAPI, userAPI } from '../lib/api';
+import { icpClient } from '../lib/icp-api';
+import type { Principal } from '@dfinity/principal';
 
 interface AuthState {
-  user: User | null;
+  principal: Principal | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (credential: string) => Promise<void>;
+  login: () => Promise<void>;
   logout: () => Promise<void>;
-  fetchUser: () => Promise<void>;
-  updateUser: (data: Partial<User>) => Promise<void>;
+  checkAuth: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
-  isAuthenticated: !!localStorage.getItem('access_token'),
+  principal: null,
+  isAuthenticated: false,
   isLoading: false,
 
-  login: async (credential: string) => {
+  login: async () => {
     set({ isLoading: true });
     try {
-      const data = await authAPI.googleLogin(credential);
-      localStorage.setItem('access_token', data.tokens.accessToken);
-      localStorage.setItem('refresh_token', data.tokens.refreshToken);
-      set({ user: data.user, isAuthenticated: true, isLoading: false });
+      await icpClient.login();
+      const principal = await icpClient.getPrincipal();
+      set({
+        principal,
+        isAuthenticated: true,
+        isLoading: false
+      });
     } catch (error) {
+      console.error('Login failed:', error);
       set({ isLoading: false });
       throw error;
     }
   },
 
   logout: async () => {
+    set({ isLoading: true });
     try {
-      await authAPI.logout();
-    } finally {
-      set({ user: null, isAuthenticated: false });
-    }
-  },
-
-  fetchUser: async () => {
-    try {
-      const user = await userAPI.getProfile();
-      set({ user, isAuthenticated: true });
+      await icpClient.logout();
+      set({
+        principal: null,
+        isAuthenticated: false,
+        isLoading: false
+      });
     } catch (error) {
-      set({ user: null, isAuthenticated: false });
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
+      console.error('Logout failed:', error);
+      set({ isLoading: false });
     }
   },
 
-  updateUser: async (data: Partial<User>) => {
-    const updatedUser = await userAPI.updateProfile(data);
-    set({ user: updatedUser });
+  checkAuth: async () => {
+    set({ isLoading: true });
+    try {
+      const isAuth = await icpClient.isAuthenticated();
+      if (isAuth) {
+        const principal = await icpClient.getPrincipal();
+        set({
+          principal,
+          isAuthenticated: true,
+          isLoading: false
+        });
+      } else {
+        set({
+          principal: null,
+          isAuthenticated: false,
+          isLoading: false
+        });
+      }
+    } catch (error) {
+      console.error('Auth check failed:', error);
+      set({
+        principal: null,
+        isAuthenticated: false,
+        isLoading: false
+      });
+    }
   },
 }));

@@ -1,25 +1,25 @@
 import { useQuery } from '@tanstack/react-query';
-import { goalAPI } from '../lib/api';
+import { icpGoalAPI } from '../lib/icp-api';
 import { Card, CardContent } from '../components/ui/card';
 import { History as HistoryIcon, CheckCircle2, XCircle, Clock } from 'lucide-react';
 import { format } from 'date-fns';
-import type { Goal } from '../types';
 
 export default function History() {
   const { data: goals = [], isLoading } = useQuery({
-    queryKey: ['goals', 'all'],
-    queryFn: () => goalAPI.list(),
+    queryKey: ['icp-goals', 'all'],
+    queryFn: icpGoalAPI.list,
   });
 
-  const sortedGoals = [...goals].sort((a: Goal, b: Goal) =>
+  const sortedGoals = [...goals].sort((a: any, b: any) =>
     new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'completed':
+      case 'Completed':
+      case 'Verified':
         return <CheckCircle2 className="h-5 w-5 text-green-500" />;
-      case 'failed':
+      case 'Failed':
         return <XCircle className="h-5 w-5 text-red-500" />;
       default:
         return <Clock className="h-5 w-5 text-yellow-500" />;
@@ -28,9 +28,10 @@ export default function History() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'completed':
+      case 'Completed':
+      case 'Verified':
         return 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400';
-      case 'failed':
+      case 'Failed':
         return 'bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400';
       default:
         return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400';
@@ -42,7 +43,7 @@ export default function History() {
       <div>
         <h1 className="text-3xl font-bold">History</h1>
         <p className="text-muted-foreground">
-          View your past goals and achievements
+          Your goal history stored immutably on-chain
         </p>
       </div>
 
@@ -64,7 +65,7 @@ export default function History() {
         </Card>
       ) : (
         <div className="space-y-4">
-          {sortedGoals.map((goal: Goal) => (
+          {sortedGoals.map((goal: any) => (
             <Card key={goal.id}>
               <CardContent className="py-4">
                 <div className="flex items-start gap-4">
@@ -93,24 +94,21 @@ export default function History() {
                       <span>
                         Created: {format(new Date(goal.createdAt), 'MMM d, yyyy h:mm a')}
                       </span>
-                      {goal.completedAt && (
-                        <span>
-                          Completed: {format(new Date(goal.completedAt), 'MMM d, yyyy h:mm a')}
+                      <span className="capitalize px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                        {goal.goalType}
+                      </span>
+                      {goal.tokensReward > 0 && (
+                        <span className="px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-800">
+                          {goal.tokensReward} tokens earned
                         </span>
                       )}
-                      <span>Progress: {goal.progress}/{goal.target}</span>
                     </div>
-                    {goal.verifications && goal.verifications.length > 0 && (
+                    {goal.proof && (
                       <div className="mt-3 p-3 bg-muted/50 rounded-md">
-                        <p className="text-xs font-medium mb-1">Verification</p>
+                        <p className="text-xs font-medium mb-1">Proof Submitted</p>
                         <p className="text-xs text-muted-foreground">
-                          {goal.verifications[0].feedback || 'Verified successfully'}
+                          {goal.proof}
                         </p>
-                        {goal.verifications[0].confidence && (
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Confidence: {(goal.verifications[0].confidence * 100).toFixed(0)}%
-                          </p>
-                        )}
                       </div>
                     )}
                   </div>

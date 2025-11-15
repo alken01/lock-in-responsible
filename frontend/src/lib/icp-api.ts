@@ -2,8 +2,15 @@ import { Actor, HttpAgent } from '@dfinity/agent';
 import { AuthClient } from '@dfinity/auth-client';
 import { Principal } from '@dfinity/principal';
 
+const getCanisterId = () => {
 // Canister ID (will be set after deployment)
-const CANISTER_ID = import.meta.env.VITE_ICP_CANISTER_ID || 'rrkah-fqaaa-aaaaa-aaaaq-cai'; // local default
+  const isLocal = import.meta.env.MODE === 'development';
+  return isLocal
+    ? (import.meta.env.VITE_ICP_CANISTER_ID_LOCAL)
+    : import.meta.env.VITE_ICP_CANISTER_ID;
+};
+
+const CANISTER_ID = getCanisterId();
 
 // IDL (Interface Definition Language) for the canister
 const idlFactory = ({ IDL }: any) => {
@@ -103,7 +110,9 @@ class ICPClient {
 
     // Determine if local or mainnet
     const isLocal = import.meta.env.MODE === 'development';
-    const host = isLocal ? 'http://127.0.0.1:8000' : 'https://ic0.app';
+    const host = isLocal
+      ? import.meta.env.VITE_ICP_HOST_LOCAL
+      : import.meta.env.VITE_ICP_HOST_MAINNET;
 
     this.agent = new HttpAgent({ host });
 
@@ -120,8 +129,13 @@ class ICPClient {
 
     const identity = this.authClient?.getIdentity();
     if (identity) {
+      const isLocal = import.meta.env.MODE === 'development';
+      const host = isLocal
+        ? import.meta.env.VITE_ICP_HOST_LOCAL
+        : import.meta.env.VITE_ICP_HOST_MAINNET;
+
       this.agent = new HttpAgent({
-        host: import.meta.env.MODE === 'development' ? 'http://127.0.0.1:8000' : 'https://ic0.app',
+        host,
         identity,
       });
 
@@ -140,11 +154,13 @@ class ICPClient {
     if (!this.authClient) await this.init();
 
     return new Promise<boolean>((resolve, reject) => {
+      const isLocal = import.meta.env.MODE === 'development';
+      const identityProvider = isLocal
+        ? import.meta.env.VITE_II_PROVIDER_LOCAL
+        : import.meta.env.VITE_II_PROVIDER_MAINNET;
+
       this.authClient?.login({
-        identityProvider:
-          import.meta.env.MODE === 'development'
-            ? `http://rdmx6-jaaaa-aaaaa-aaadq-cai.localhost:8000` // local II
-            : 'https://identity.ic0.app', // mainnet II
+        identityProvider,
         onSuccess: () => {
           this.createActor();
           resolve(true);
