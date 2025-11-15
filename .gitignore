@@ -1,41 +1,27 @@
 # Lock-In Responsible - Project-wide .gitignore
 
 # ===================================
-# Backend
+# Frontend (React + Vite)
 # ===================================
 
-backend/node_modules/
-backend/dist/
-backend/build/
-backend/.env
-backend/.env.local
-backend/dev.db
-backend/dev.db-journal
-backend/logs/
-backend/uploads/
-backend/*.log
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.env
+frontend/.env.local
+frontend/.vite/
+frontend/.claude
 
 # ===================================
-# Firmware
+# Validator Node
 # ===================================
 
-firmware/.pio/
-firmware/.vscode/
-firmware/include/config.h
-firmware/lib/
-firmware/test/
-firmware/*.bin
-firmware/*.elf
-
-# ===================================
-# Client (future)
-# ===================================
-
-client/node_modules/
-client/dist/
-client/build/
-client/.env
-client/.env.local
+validator-node/node_modules/
+validator-node/dist/
+validator-node/.env
+validator-node/.env.local
+validator-node/logs/
+validator-node/*.log
 
 # ===================================
 # General
@@ -111,17 +97,17 @@ temp/
 *.tar.gz
 *.rar
 
-# Hardware
-hardware/*.stl.backup
-hardware/*.gcode
-
 # ===================================
 # ICP (Internet Computer)
 # ===================================
 
+# DFX build artifacts
 .dfx/
+canister/.dfx/
+
+# Canister IDs (local development)
 canister_ids.json
+.ic-assets.json
+
+# ICP environment
 .env.icp
-frontend/node_modules/
-frontend/dist/
-frontend/.env.icp

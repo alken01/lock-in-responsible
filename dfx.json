@@ -3,7 +3,7 @@
   "canisters": {
     "lock_in_backend": {
       "type": "motoko",
-      "main": "src/lock_in_backend/main.mo"
+      "main": "canister/main.mo"
     },
     "lock_in_frontend": {
       "type": "assets",
