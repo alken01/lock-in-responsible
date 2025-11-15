@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "canisters": {
+    "storage": {
+      "type": "motoko",
+      "main": "src/storage/main.mo",
+      "declarations": {
+        "output": "declarations/storage",
+        "bindings": ["js", "ts", "did"]
+      }
+    },
+    "ai_validator": {
+      "type": "motoko",
+      "main": "src/ai_validator/main.mo",
+      "declarations": {
+        "output": "declarations/ai_validator",
+        "bindings": ["js", "ts", "did"]
+      }
+    },
+    "bridge": {
+      "type": "motoko",
+      "main": "src/bridge/main.mo",
+      "declarations": {
+        "output": "declarations/bridge",
+        "bindings": ["js", "ts", "did"]
+      }
+    },
+    "frontend_icp": {
+      "type": "assets",
+      "source": ["dist"],
+      "dependencies": ["storage", "ai_validator", "bridge"]
+    }
+  },
+  "defaults": {
+    "build": {
+      "packtool": ""
+    },
+    "replica": {
+      "subnet_type": "application"
+    }
+  },
+  "networks": {
+    "local": {
+      "bind": "127.0.0.1:8000",
+      "type": "ephemeral"
+    },
+    "ic": {
+      "providers": [
+        "https://mainnet.dfinity.network"
+      ],
+      "type": "persistent"
+    }
+  }
+}
