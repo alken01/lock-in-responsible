@@ -1,302 +1,136 @@
-import { ethers } from 'ethers';
-import { OllamaClient } from './llm/ollama.js';
-import { IPFSClient } from './storage/ipfs.js';
-import { logger } from './utils/logger.js';
+import { HttpAgent } from '@dfinity/agent';
+import { Principal } from '@dfinity/principal';
+import { LLMVerifier } from './llm-verifier.js';
 
-/**
- * Validator Node - Listens for validation requests and processes them using local LLM
- */
-export class ValidatorNode {
+export class Validator {
   constructor(config) {
     this.config = config;
-    this.provider = new ethers.JsonRpcProvider(config.rpcUrl);
-    this.wallet = new ethers.Wallet(config.privateKey, this.provider);
-    this.address = this.wallet.address;
-
-    // Initialize clients
-    this.ollama = new OllamaClient(config.ollamaUrl, config.llmModel);
-    this.ipfs = new IPFSClient(config.ipfsGateway);
-
-    // State
-    this.isActive = false;
+    this.agent = null;
+    this.actor = null;
+    this.llmVerifier = new LLMVerifier(config.llmProvider);
     this.isRunning = false;
-    this.reputation = 0;
-    this.stats = {
-      totalValidations: 0,
-      successfulValidations: 0,
-      failedValidations: 0,
-      totalRewardsEarned: ethers.parseEther('0'),
-    };
-
-    // Contract instances
-    this.goalRegistry = null;
-    this.validatorRegistry = null;
-
-    // Event listeners
-    this.eventListeners = [];
+    this.activeRequests = new Map();
   }
 
-  /**
-   * Initialize the validator node
-   */
-  async initialize() {
-    logger.info('🔧 Initializing validator node...');
-    logger.info(`   Validator address: ${this.address}`);
-
-    // Load contract ABIs
-    const { GoalRegistryABI, ValidatorRegistryABI } = await this._loadABIs();
-
-    // Create contract instances
-    this.goalRegistry = new ethers.Contract(
-      this.config.goalRegistryAddress,
-      GoalRegistryABI,
-      this.wallet
-    );
-
-    this.validatorRegistry = new ethers.Contract(
-      this.config.validatorRegistryAddress,
-      ValidatorRegistryABI,
-      this.wallet
-    );
-
-    // Check if registered as validator
-    const validatorData = await this.validatorRegistry.getValidator(this.address);
-    this.isActive = validatorData.isActive;
-    this.reputation = Number(validatorData.reputation);
-
-    if (this.isActive) {
-      logger.info(`✅ Registered validator`);
-      logger.info(`   Reputation: ${this.reputation}/1000`);
-      logger.info(`   Total validations: ${validatorData.totalValidations}`);
-      logger.info(`   Stake: ${ethers.formatEther(validatorData.stake)} ETH`);
-    } else {
-      logger.warn(`⚠️  Not registered as active validator`);
-      logger.warn(`   Register with: npm run register-validator`);
-    }
-
-    // Test Ollama connection
-    await this.ollama.testConnection();
-
-    logger.info('✅ Initialization complete');
-  }
-
-  /**
-   * Start listening for validation requests
-   */
   async start() {
-    if (this.isRunning) {
-      logger.warn('Validator node already running');
-      return;
+    console.log('📡 Connecting to ICP network...');
+
+    // Create agent
+    const host = this.config.network === 'local'
+      ? 'http://localhost:4943'
+      : 'https://ic0.app';
+
+    this.agent = new HttpAgent({ host });
+
+    // For local development, fetch root key
+    if (this.config.network === 'local') {
+      await this.agent.fetchRootKey();
     }
 
-    if (!this.isActive) {
-      logger.error('Cannot start: validator not active');
-      logger.error('Please register as validator first');
-      return;
-    }
+    // TODO: Create actor with proper IDL
+    // this.actor = Actor.createActor(idlFactory, {
+    //   agent: this.agent,
+    //   canisterId: this.config.canisterId,
+    // });
+
+    console.log('✅ Connected to ICP');
+    console.log('🔄 Starting request listener...');
 
     this.isRunning = true;
-    logger.info('🎧 Listening for validation requests...');
-    logger.info('=' .repeat(60));
+    this.listenForRequests();
+  }
 
-    // Listen for ProofSubmitted events
-    const filter = this.goalRegistry.filters.ProofSubmitted();
+  async listenForRequests() {
+    while (this.isRunning) {
+      try {
+        // Poll canister for pending verification requests
+        // const requests = await this.actor.getPendingRequests();
 
-    this.goalRegistry.on(filter, async (goalId, validationId, proofIpfsHash, validators, event) => {
-      // Check if this validator was selected
-      if (validators.includes(this.address)) {
-        logger.info(`\n📬 New validation request received!`);
-        logger.info(`   Validation ID: ${validationId}`);
-        logger.info(`   Goal ID: ${goalId}`);
+        // For now, simulating
+        const requests = [];
 
-        try {
-          await this.processValidationRequest(validationId, goalId, proofIpfsHash);
-        } catch (error) {
-          logger.error(`❌ Error processing validation ${validationId}:`, error);
+        for (const request of requests) {
+          // Check if we're a selected validator
+          if (this.isSelectedValidator(request)) {
+            // Process request if not already processing
+            if (!this.activeRequests.has(request.id)) {
+              this.processRequest(request).catch(err => {
+                console.error(`Error processing request ${request.id}:`, err);
+              });
+            }
+          }
         }
+
+        // Wait before next poll
+        await this.sleep(this.config.pollInterval);
+
+      } catch (error) {
+        console.error('Error in request listener:', error);
+        await this.sleep(this.config.pollInterval);
       }
-    });
-
-    // Periodic health check
-    setInterval(() => this._healthCheck(), 60000); // Every minute
-  }
-
-  /**
-   * Stop the validator node
-   */
-  async stop() {
-    if (!this.isRunning) {
-      return;
     }
-
-    logger.info('Stopping validator node...');
-    this.isRunning = false;
-
-    // Remove event listeners
-    this.goalRegistry.removeAllListeners();
-
-    logger.info('✅ Validator node stopped');
   }
 
-  /**
-   * Process a validation request
-   */
-  async processValidationRequest(validationId, goalId, proofIpfsHash) {
-    const startTime = Date.now();
+  isSelectedValidator(request) {
+    // Check if our principal is in the selected validators list
+    const ourPrincipal = this.agent.getPrincipal();
+    return request.validators.some(v =>
+      v.toText() === ourPrincipal.toText()
+    );
+  }
 
-    logger.info(`\n${'='.repeat(60)}`);
-    logger.info(`🔍 Processing Validation #${validationId}`);
-    logger.info(`${'='.repeat(60)}`);
+  async processRequest(request) {
+    console.log(`\n🔍 Processing verification request: ${request.id}`);
+    this.activeRequests.set(request.id, Date.now());
 
     try {
-      // Step 1: Fetch goal details
-      logger.info('📥 Step 1/5: Fetching goal details...');
-      const goal = await this.goalRegistry.goals(goalId);
-      const goalIpfsHash = goal.ipfsHash;
+      // 1. Download proof data
+      console.log('📥 Downloading proof...');
+      const proof = await this.downloadProof(request.proofUrl);
 
-      // Fetch goal description from IPFS
-      const goalData = await this.ipfs.fetchJson(goalIpfsHash);
-      logger.info(`   Goal: ${goalData.title}`);
-      logger.info(`   Description: ${goalData.description.substring(0, 100)}...`);
+      // 2. Verify with LLM
+      console.log(`🤖 Verifying with ${this.config.llmProvider}...`);
+      const verdict = await this.llmVerifier.verify(request.goal, proof);
 
-      // Step 2: Fetch proof data
-      logger.info('📥 Step 2/5: Fetching proof from IPFS...');
-      const proofData = await this.ipfs.fetchJson(proofIpfsHash);
-      logger.info(`   Proof text length: ${proofData.text?.length || 0} chars`);
-      logger.info(`   Proof images: ${proofData.images?.length || 0}`);
-
-      // Step 3: Run LLM validation
-      logger.info('🤖 Step 3/5: Running LLM validation...');
-      const llmResult = await this.ollama.validateProof({
-        goalTitle: goalData.title,
-        goalDescription: goalData.description,
-        goalType: goalData.type,
-        proofText: proofData.text,
-        proofImages: proofData.images, // URLs to images
-        metadata: {
-          validationId: validationId.toString(),
-          goalId: goalId.toString(),
-        },
+      console.log('📊 Verdict:', {
+        verified: verdict.verified,
+        confidence: verdict.confidence,
+        reasoning: verdict.reasoning.substring(0, 100) + '...'
       });
 
-      logger.info(`   LLM Decision: ${llmResult.approved ? '✅ APPROVED' : '❌ REJECTED'}`);
-      logger.info(`   Confidence: ${llmResult.confidence}%`);
-      logger.info(`   Reasoning: ${llmResult.reasoning.substring(0, 100)}...`);
+      // 3. Submit verdict to canister
+      console.log('📤 Submitting verdict to ICP...');
+      // await this.actor.submitVerdict(
+      //   request.id,
+      //   verdict.verified,
+      //   verdict.confidence,
+      //   verdict.reasoning
+      // );
 
-      // Step 4: Upload reasoning to IPFS
-      logger.info('📤 Step 4/5: Uploading reasoning to IPFS...');
-      const reasoningIpfsHash = await this.ipfs.uploadJson({
-        validationId: validationId.toString(),
-        validator: this.address,
-        approved: llmResult.approved,
-        confidence: llmResult.confidence,
-        reasoning: llmResult.reasoning,
-        timestamp: Date.now(),
-        llmModel: this.config.llmModel,
-      });
-      logger.info(`   Reasoning IPFS hash: ${reasoningIpfsHash}`);
-
-      // Step 5: Submit vote to blockchain
-      logger.info('📝 Step 5/5: Submitting vote to blockchain...');
-      const tx = await this.goalRegistry.castVote(
-        validationId,
-        llmResult.approved,
-        llmResult.confidence,
-        reasoningIpfsHash
-      );
-
-      logger.info(`   Transaction hash: ${tx.hash}`);
-      logger.info(`   ⏳ Waiting for confirmation...`);
-
-      const receipt = await tx.wait();
-
-      if (receipt.status === 1) {
-        logger.info(`   ✅ Vote submitted successfully!`);
-        logger.info(`   Block number: ${receipt.blockNumber}`);
-        logger.info(`   Gas used: ${receipt.gasUsed.toString()}`);
-
-        this.stats.totalValidations++;
-        if (llmResult.approved) {
-          this.stats.successfulValidations++;
-        }
-      } else {
-        logger.error(`   ❌ Transaction failed`);
-      }
-
-      const duration = ((Date.now() - startTime) / 1000).toFixed(2);
-      logger.info(`\n⏱️  Total processing time: ${duration}s`);
-      logger.info(`${'='.repeat(60)}\n`);
+      console.log('✅ Verdict submitted successfully!');
 
     } catch (error) {
-      logger.error(`❌ Error in validation process:`, error);
-      logger.error(`   Validation ID: ${validationId}`);
-      logger.error(`   Goal ID: ${goalId}`);
-
-      this.stats.failedValidations++;
+      console.error('❌ Failed to process request:', error);
+    } finally {
+      this.activeRequests.delete(request.id);
     }
   }
 
-  /**
-   * Get validator statistics
-   */
-  getStats() {
+  async downloadProof(proofUrl) {
+    // Download proof from IPFS/HTTP
+    // For now, return mock data
     return {
-      validator: this.address,
-      isActive: this.isActive,
-      reputation: this.reputation,
-      stats: {
-        ...this.stats,
-        totalRewardsEarned: ethers.formatEther(this.stats.totalRewardsEarned),
-        successRate: this.stats.totalValidations > 0
-          ? ((this.stats.successfulValidations / this.stats.totalValidations) * 100).toFixed(2) + '%'
-          : '0%',
-      },
+      text: "I coded for 2 hours on my project",
+      screenshot: null
     };
   }
 
-  /**
-   * Periodic health check
-   */
-  async _healthCheck() {
-    try {
-      // Check blockchain connection
-      const blockNumber = await this.provider.getBlockNumber();
-
-      // Check Ollama connection
-      await this.ollama.testConnection();
-
-      // Update validator stats
-      const validatorData = await this.validatorRegistry.getValidator(this.address);
-      this.reputation = Number(validatorData.reputation);
-      this.isActive = validatorData.isActive;
-
-      logger.info(`💓 Health check: Block ${blockNumber}, Reputation ${this.reputation}`);
-
-    } catch (error) {
-      logger.error('❌ Health check failed:', error);
-    }
+  sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  /**
-   * Load contract ABIs (simplified for now)
-   */
-  async _loadABIs() {
-    // In production, load from compiled contract artifacts
-    // For now, return minimal ABIs with the functions we need
-
-    const GoalRegistryABI = [
-      'event ProofSubmitted(uint256 indexed goalId, uint256 indexed validationId, string proofIpfsHash, address[] validators)',
-      'function goals(uint256) view returns (address user, uint256 goalId, string ipfsHash, uint256 stakeAmount, uint256 deadline, bytes32 deviceId, uint8 status, uint256 createdAt)',
-      'function castVote(uint256 validationId, bool approved, uint8 confidence, string reasoningIpfsHash) returns ()',
-      'function getValidationDetails(uint256) view returns (uint256 goalId, string proofIpfsHash, address[] validators, uint256 approvalCount, uint256 rejectionCount, uint8 status)',
-    ];
-
-    const ValidatorRegistryABI = [
-      'function getValidator(address) view returns (uint256 stake, uint256 reputation, uint256 totalValidations, uint256 successfulValidations, uint256 totalRewardsEarned, bool isActive, string metadata)',
-      'function registerValidator(string metadata) payable',
-      'function isActiveValidator(address) view returns (bool)',
-    ];
-
-    return { GoalRegistryABI, ValidatorRegistryABI };
+  stop() {
+    console.log('🛑 Stopping validator node...');
+    this.isRunning = false;
   }
 }
