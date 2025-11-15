@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lock-In Responsible - ICP Demo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+  </style>
+</head>
+<body class="p-8">
+  <div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="bg-white rounded-lg shadow-xl p-8 mb-6">
+      <h1 class="text-4xl font-bold text-gray-800 mb-2">🔒 Lock-In Responsible</h1>
+      <p class="text-xl text-gray-600">ICP Hackathon Demo - Blockchain-Powered Accountability</p>
+    </div>
+
+    <!-- Main Demo Area -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+      <!-- Left: Create Goal -->
+      <div class="bg-white rounded-lg shadow-xl p-6">
+        <h2 class="text-2xl font-bold mb-4 text-gray-800">📝 Create Goal on Blockchain</h2>
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium mb-2">Goal Title</label>
+            <input
+              id="goalTitle"
+              type="text"
+              placeholder="Win ICP Hackathon"
+              class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-2">Description</label>
+            <input
+              id="goalDesc"
+              type="text"
+              placeholder="Build amazing blockchain app"
+              class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500"
+            />
+          </div>
+          <button
+            onclick="createGoal()"
+            class="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 rounded-lg font-semibold hover:from-purple-700 hover:to-blue-700 transition"
+          >
+            Create Goal on ICP
+          </button>
+        </div>
+
+        <!-- Submit Proof Section -->
+        <div class="mt-6 pt-6 border-t">
+          <h3 class="text-xl font-bold mb-3 text-gray-800">✅ Submit Proof</h3>
+          <div class="space-y-3">
+            <input
+              id="goalId"
+              type="number"
+              placeholder="Goal ID (usually 0 for first goal)"
+              class="w-full px-4 py-2 border rounded-lg"
+            />
+            <input
+              id="proof"
+              type="text"
+              placeholder="Proof of completion"
+              class="w-full px-4 py-2 border rounded-lg"
+            />
+            <button
+              onclick="submitProof()"
+              class="w-full bg-green-600 text-white py-2 rounded-lg font-semibold hover:bg-green-700 transition"
+            >
+              Submit Proof & Earn Tokens! 🪙
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Stats & Info -->
+      <div class="space-y-6">
+        <!-- Token Balance -->
+        <div class="bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg shadow-xl p-6 text-white">
+          <h2 class="text-2xl font-bold mb-2">💰 Token Balance</h2>
+          <p class="text-5xl font-bold" id="tokenBalance">Loading...</p>
+          <button
+            onclick="getTokens()"
+            class="mt-4 bg-white text-orange-600 px-4 py-2 rounded-lg font-semibold hover:bg-gray-100 transition"
+          >
+            Refresh
+          </button>
+        </div>
+
+        <!-- Stats -->
+        <div class="bg-white rounded-lg shadow-xl p-6">
+          <h2 class="text-2xl font-bold mb-4 text-gray-800">📊 Your Stats</h2>
+          <div id="stats" class="space-y-2 text-gray-700">
+            <p>Click "Refresh Stats" to load...</p>
+          </div>
+          <button
+            onclick="getStats()"
+            class="mt-4 w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition"
+          >
+            Refresh Stats
+          </button>
+        </div>
+
+        <!-- Canister Info -->
+        <div class="bg-white rounded-lg shadow-xl p-6">
+          <h2 class="text-2xl font-bold mb-4 text-gray-800">ℹ️ Canister Info</h2>
+          <div id="canisterInfo" class="space-y-2 text-sm text-gray-700">
+            <p class="font-mono text-xs break-all">Canister ID: <span id="canisterId">Loading...</span></p>
+          </div>
+          <button
+            onclick="getInfo()"
+            class="mt-4 w-full bg-purple-600 text-white py-2 rounded-lg font-semibold hover:bg-purple-700 transition"
+          >
+            Get Canister Info
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Output Log -->
+    <div class="bg-gray-900 text-green-400 rounded-lg shadow-xl p-6 mt-6 font-mono text-sm">
+      <h3 class="text-xl font-bold mb-3 text-white">🖥️ Console Output</h3>
+      <div id="output" class="space-y-1 max-h-64 overflow-y-auto">
+        <p>Ready to interact with ICP blockchain...</p>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { HttpAgent, Actor } from 'https://cdn.jsdelivr.net/npm/@dfinity/agent@2.1.1/+esm';
+    import { idlFactory } from './icp-interface.js';
+
+    // Replace with your canister ID
+    const CANISTER_ID = 'REPLACE_WITH_YOUR_CANISTER_ID';
+
+    const agent = new HttpAgent({ host: 'http://127.0.0.1:8000' });
+    agent.fetchRootKey(); // Only for local development
+
+    const actor = Actor.createActor(idlFactory, {
+      agent,
+      canisterId: CANISTER_ID,
+    });
+
+    window.actor = actor;
+    document.getElementById('canisterId').textContent = CANISTER_ID;
+
+    function log(message, isError = false) {
+      const output = document.getElementById('output');
+      const p = document.createElement('p');
+      p.textContent = `> ${message}`;
+      if (isError) p.className = 'text-red-400';
+      output.appendChild(p);
+      output.scrollTop = output.scrollHeight;
+    }
+
+    window.createGoal = async function() {
+      const title = document.getElementById('goalTitle').value;
+      const desc = document.getElementById('goalDesc').value;
+
+      if (!title) {
+        alert('Please enter a goal title');
+        return;
+      }
+
+      try {
+        log('Creating goal on blockchain...');
+        const goalId = await actor.createGoal(
+          title,
+          desc || 'No description',
+          { Custom: null },
+          BigInt(Date.now() * 1000000)
+        );
+        log(`✅ Goal created! ID: ${goalId}`);
+        document.getElementById('goalId').value = Number(goalId);
+      } catch (e) {
+        log(`❌ Error: ${e.message}`, true);
+      }
+    };
+
+    window.submitProof = async function() {
+      const goalId = document.getElementById('goalId').value;
+      const proof = document.getElementById('proof').value;
+
+      if (!goalId || !proof) {
+        alert('Please enter goal ID and proof');
+        return;
+      }
+
+      try {
+        log('Submitting proof...');
+        const result = await actor.submitProof(BigInt(goalId), proof);
+        if (result) {
+          log('✅ Proof accepted! You earned 10 tokens! 🎉');
+          await getTokens();
+        } else {
+          log('❌ Proof rejected', true);
+        }
+      } catch (e) {
+        log(`❌ Error: ${e.message}`, true);
+      }
+    };
+
+    window.getTokens = async function() {
+      try {
+        log('Fetching token balance...');
+        const balance = await actor.getMyTokens();
+        document.getElementById('tokenBalance').textContent = Number(balance);
+        log(`💰 Tokens: ${balance}`);
+      } catch (e) {
+        log(`❌ Error: ${e.message}`, true);
+      }
+    };
+
+    window.getStats = async function() {
+      try {
+        log('Fetching stats...');
+        const stats = await actor.getMyStats();
+        const html = `
+          <p>📈 Total Goals: ${stats.totalGoals}</p>
+          <p>✅ Completed: ${stats.completedGoals}</p>
+          <p>❌ Failed: ${stats.failedGoals}</p>
+          <p>🔥 Current Streak: ${stats.currentStreak}</p>
+          <p>🏆 Longest Streak: ${stats.longestStreak}</p>
+          <p>💰 Total Tokens: ${stats.totalTokens}</p>
+        `;
+        document.getElementById('stats').innerHTML = html;
+        log('📊 Stats loaded');
+      } catch (e) {
+        log(`❌ Error: ${e.message}`, true);
+      }
+    };
+
+    window.getInfo = async function() {
+      try {
+        log('Fetching canister info...');
+        const info = await actor.getInfo();
+        const html = `
+          <p class="font-mono text-xs break-all">Canister ID: ${CANISTER_ID}</p>
+          <p class="mt-2">Total Goals Created: ${info.totalGoals}</p>
+          <p>Total Users: ${info.totalUsers}</p>
+          <p>Version: ${info.version}</p>
+        `;
+        document.getElementById('canisterInfo').innerHTML = html;
+        log('ℹ️ Canister info loaded');
+      } catch (e) {
+        log(`❌ Error: ${e.message}`, true);
+      }
+    };
+
+    // Auto-load on start
+    getTokens();
+    log('Connected to ICP local network ✨');
+  </script>
+</body>
+</html>
