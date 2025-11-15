@@ -2,12 +2,17 @@ import { Actor, HttpAgent } from '@dfinity/agent';
 import { AuthClient } from '@dfinity/auth-client';
 import { Principal } from '@dfinity/principal';
 
-const getCanisterId = () => {
 // Canister ID (will be set after deployment)
-  const isLocal = import.meta.env.MODE === 'development';
-  return isLocal
-    ? (import.meta.env.VITE_ICP_CANISTER_ID_LOCAL)
-    : import.meta.env.VITE_ICP_CANISTER_ID;
+const getCanisterId = () => {
+  const network = import.meta.env.VITE_ICP_NETWORK || 'development';
+
+  if (network === 'development') {
+    // Local development
+    return import.meta.env.VITE_ICP_CANISTER_ID_LOCAL || import.meta.env.VITE_ICP_CANISTER_ID;
+  } else {
+    // Production - uses mainnet canister ID
+    return import.meta.env.VITE_ICP_CANISTER_ID;
+  }
 };
 
 const CANISTER_ID = getCanisterId();
