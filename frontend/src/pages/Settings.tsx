@@ -197,7 +197,7 @@ export default function Settings() {
             <CardTitle>Your Stats</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <div>
                 <div className="text-2xl font-bold">{user.stats.totalGoalsCompleted}</div>
                 <div className="text-xs text-muted-foreground">Goals Completed</div>
@@ -209,10 +209,6 @@ export default function Settings() {
               <div>
                 <div className="text-2xl font-bold">{user.stats.longestStreak}</div>
                 <div className="text-xs text-muted-foreground">Longest Streak</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold">{user.stats.devicesOwned}</div>
-                <div className="text-xs text-muted-foreground">Devices</div>
               </div>
             </div>
           </CardContent>

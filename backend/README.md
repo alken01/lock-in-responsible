@@ -8,7 +8,6 @@ Backend API service for the Lock-In Responsible system.
 - JWT authentication with refresh tokens
 - PostgreSQL database with Prisma ORM
 - LLM integration (OpenAI GPT-4 / Anthropic Claude)
-- Device authentication and management
 - Goal tracking and verification
 - Rate limiting and security features
 
@@ -108,21 +107,10 @@ Full API documentation is available in [`/docs/API.md`](../docs/API.md)
 - `GET /api/users/me` - Get current user profile
 - `PATCH /api/users/me` - Update profile
 
-#### Devices
-- `GET /api/devices` - List devices
-- `POST /api/devices/pair` - Pair new device
-- `GET /api/devices/:id` - Get device details
-- `POST /api/devices/:id/unlock` - Request unlock code
-
 #### Goals
 - `GET /api/goals` - List goals
 - `POST /api/goals` - Create goal
 - `POST /api/goals/:id/verify` - Submit proof for verification
-
-#### Device API (for ESP32)
-- `POST /api/device/heartbeat` - Device check-in
-- `POST /api/device/validate-code` - Validate unlock code
-- `POST /api/device/log-event` - Log device event
 
 ## Project Structure
 
@@ -202,7 +190,6 @@ CMD ["npm", "start"]
 - Helmet.js security headers
 - Input validation with Zod
 - SQL injection protection via Prisma
-- Device API keys for ESP32 authentication
 
 ## Troubleshooting
 

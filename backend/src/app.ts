@@ -10,10 +10,8 @@ import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 // Import routes
 import authRoutes from './routes/auth.routes';
 import userRoutes from './routes/user.routes';
-import deviceRoutes from './routes/device.routes';
 import goalRoutes from './routes/goal.routes';
 import analyticsRoutes from './routes/analytics.routes';
-import deviceApiRoutes from './routes/deviceApi.routes';
 
 const app: Application = express();
 
@@ -68,12 +66,8 @@ app.get('/health', (req, res) => {
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
-app.use('/api/devices', deviceRoutes);
 app.use('/api/goals', goalRoutes);
 app.use('/api/analytics', analyticsRoutes);
-
-// Device API routes (for ESP32)
-app.use('/api/device', deviceApiRoutes);
 
 // 404 handler
 app.use(notFoundHandler);

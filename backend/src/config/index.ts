@@ -69,20 +69,6 @@ export const config = {
     file: process.env.LOG_FILE || './logs/app.log',
   },
 
-  // Device Settings
-  device: {
-    defaultCodeLength: parseInt(process.env.DEFAULT_CODE_LENGTH || '6', 10),
-    defaultCodeExpirySeconds: parseInt(process.env.DEFAULT_CODE_EXPIRY_SECONDS || '300', 10),
-    maxUnlockAttempts: parseInt(process.env.MAX_UNLOCK_ATTEMPTS || '3', 10),
-    unlockAttemptWindowSeconds: parseInt(process.env.UNLOCK_ATTEMPT_WINDOW_SECONDS || '900', 10),
-  },
-
-  // WebSocket
-  websocket: {
-    port: parseInt(process.env.WS_PORT || '3001', 10),
-    path: process.env.WS_PATH || '/ws',
-  },
-
   // Email (optional)
   email: {
     smtp: {

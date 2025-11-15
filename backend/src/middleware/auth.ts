@@ -12,10 +12,6 @@ export interface AuthRequest extends Request {
     email: string;
     name: string;
   };
-  device?: {
-    id: string;
-    userId: string;
-  };
 }
 
 export const authenticate = async (
@@ -65,35 +61,7 @@ export const authenticate = async (
   }
 };
 
-export const authenticateDevice = async (
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const apiKey = req.headers['x-device-key'] as string;
-
-    if (!apiKey) {
-      throw new UnauthorizedError('Missing device API key');
-    }
-
-    const device = await prisma.device.findUnique({
-      where: { apiKey },
-      select: { id: true, userId: true },
-    });
-
-    if (!device) {
-      throw new UnauthorizedError('Invalid device API key');
-    }
-
-    req.device = device;
-    next();
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const requireOwnership = (resourceType: 'device' | 'goal') => {
+export const requireOwnership = (resourceType: 'goal') => {
   return async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       if (!req.user) {
@@ -106,19 +74,10 @@ export const requireOwnership = (resourceType: 'device' | 'goal') => {
         throw new ForbiddenError('Resource ID not provided');
       }
 
-      let resource;
-
-      if (resourceType === 'device') {
-        resource = await prisma.device.findUnique({
-          where: { id: resourceId },
-          select: { userId: true },
-        });
-      } else if (resourceType === 'goal') {
-        resource = await prisma.goal.findUnique({
-          where: { id: resourceId },
-          select: { userId: true },
-        });
-      }
+      const resource = await prisma.goal.findUnique({
+        where: { id: resourceId },
+        select: { userId: true },
+      });
 
       if (!resource) {
         throw new ForbiddenError('Resource not found');

@@ -7,7 +7,6 @@ export interface User {
     totalGoalsCompleted: number;
     currentStreak: number;
     longestStreak: number;
-    devicesOwned: number;
   };
   preferences?: {
     codeLength: number;
@@ -21,22 +20,6 @@ export interface User {
   };
 }
 
-export interface Device {
-  id: string;
-  name: string;
-  macAddress: string;
-  status: 'online' | 'offline' | 'error';
-  lastSeen?: string;
-  firmwareVersion: string;
-  batteryLevel?: number;
-  lockState: 'locked' | 'unlocked';
-  settings: {
-    autoLockDelay: number;
-    unlockDuration: number;
-    buzzerEnabled: boolean;
-  };
-}
-
 export interface Goal {
   id: string;
   title: string;
@@ -47,11 +30,6 @@ export interface Goal {
   status: 'pending' | 'completed' | 'failed';
   dueDate?: string;
   completedAt?: string;
-  deviceId?: string;
-  device?: {
-    id: string;
-    name: string;
-  };
   verifications?: Verification[];
   verificationType: 'manual' | 'github' | 'llm' | 'custom';
   verificationConfig: any;
@@ -69,10 +47,4 @@ export interface Verification {
   feedback?: string;
   verifiedAt?: string;
   createdAt: string;
-}
-
-export interface UnlockCode {
-  unlockCode: string;
-  expiresAt: string;
-  expiresIn: number;
 }

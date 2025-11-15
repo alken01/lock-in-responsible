@@ -8,7 +8,6 @@ import {
   Settings,
   Lock,
   LogOut,
-  Smartphone,
   Menu,
   X
 } from 'lucide-react';
@@ -30,7 +29,6 @@ export default function Dashboard() {
 
   const navItems = [
     { path: '/dashboard', icon: Target, label: 'Goals' },
-    { path: '/dashboard/devices', icon: Smartphone, label: 'Devices' },
     { path: '/dashboard/history', icon: History, label: 'History' },
     { path: '/dashboard/settings', icon: Settings, label: 'Settings' },
   ];

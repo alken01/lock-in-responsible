@@ -55,26 +55,3 @@ export class InternalError extends AppError {
   }
 }
 
-export class GoalNotCompleteError extends AppError {
-  constructor(message = 'Goals not yet completed', details?: any) {
-    super(message, 400, 'GOAL_NOT_COMPLETE', details);
-  }
-}
-
-export class CodeExpiredError extends AppError {
-  constructor(message = 'Unlock code has expired', details?: any) {
-    super(message, 400, 'CODE_EXPIRED', details);
-  }
-}
-
-export class CodeInvalidError extends AppError {
-  constructor(message = 'Unlock code is incorrect', details?: any) {
-    super(message, 400, 'CODE_INVALID', details);
-  }
-}
-
-export class DeviceOfflineError extends AppError {
-  constructor(message = 'Device not reachable', details?: any) {
-    super(message, 503, 'DEVICE_OFFLINE', details);
-  }
-}

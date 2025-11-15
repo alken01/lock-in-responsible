@@ -80,23 +80,6 @@ export const userAPI = {
   },
 };
 
-export const deviceAPI = {
-  list: async () => {
-    const response = await api.get('/devices');
-    return response.data.data.devices;
-  },
-
-  pair: async (deviceMac: string, deviceName: string) => {
-    const response = await api.post('/devices/pair', { deviceMac, deviceName });
-    return response.data.data.device;
-  },
-
-  requestUnlock: async (deviceId: string) => {
-    const response = await api.post(`/devices/${deviceId}/unlock`);
-    return response.data.data;
-  },
-};
-
 export const goalAPI = {
   list: async (params?: any) => {
     const response = await api.get('/goals', { params });
