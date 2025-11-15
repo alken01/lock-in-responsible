@@ -3,6 +3,7 @@ import HashMap "mo:base/HashMap";
 import Hash "mo:base/Hash";
 import Iter "mo:base/Iter";
 import Nat "mo:base/Nat";
+import Nat32 "mo:base/Nat32";
 import Option "mo:base/Option";
 import Principal "mo:base/Principal";
 import Text "mo:base/Text";
@@ -10,7 +11,7 @@ import Time "mo:base/Time";
 import Int "mo:base/Int";
 import Buffer "mo:base/Buffer";
 
-actor LockInResponsible {
+persistent actor LockInResponsible {
 
   // Types
   type UserId = Principal;
@@ -54,9 +55,20 @@ actor LockInResponsible {
     totalTokens: Nat;
   };
 
+  // Custom hash function for Nat
+  private func natHash(n : Nat) : Hash.Hash {
+    var hash : Nat32 = 0;
+    var value = n;
+    while (value > 0) {
+      hash := hash +% Nat32.fromNat(value % 256);
+      value := value / 256;
+    };
+    hash
+  };
+
   // State
   private stable var nextGoalId: Nat = 0;
-  private transient var goals = HashMap.HashMap<GoalId, Goal>(0, Nat.equal, Nat.hash);
+  private transient var goals = HashMap.HashMap<GoalId, Goal>(0, Nat.equal, natHash);
   private transient var userGoals = HashMap.HashMap<UserId, [GoalId]>(0, Principal.equal, Principal.hash);
   private transient var userTokens = HashMap.HashMap<UserId, Nat>(0, Principal.equal, Principal.hash);
   private transient var userStats = HashMap.HashMap<UserId, UserStats>(0, Principal.equal, Principal.hash);
@@ -75,7 +87,7 @@ actor LockInResponsible {
   };
 
   system func postupgrade() {
-    goals := HashMap.fromIter<GoalId, Goal>(goalsEntries.vals(), 0, Nat.equal, Nat.hash);
+    goals := HashMap.fromIter<GoalId, Goal>(goalsEntries.vals(), 0, Nat.equal, natHash);
     userGoals := HashMap.fromIter<UserId, [GoalId]>(userGoalsEntries.vals(), 0, Principal.equal, Principal.hash);
     userTokens := HashMap.fromIter<UserId, Nat>(userTokensEntries.vals(), 0, Principal.equal, Principal.hash);
     userStats := HashMap.fromIter<UserId, UserStats>(userStatsEntries.vals(), 0, Principal.equal, Principal.hash);
