@@ -94,7 +94,7 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed system design.
 
 ```
 lock-in-responsible/
-├── src/lock_in_backend/     # ICP canister (Motoko smart contract)
+├── canister/                # ICP canister (Motoko smart contract)
 │   └── main.mo              # Goals, validators, consensus, tokens
 │
 ├── frontend/                # React web app

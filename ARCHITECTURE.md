@@ -110,7 +110,7 @@ Result: Goal stored on blockchain, cannot be deleted
   - Check token balance
   - View leaderboard
 
-### 2. ICP Canister (`/src/lock_in_backend`)
+### 2. ICP Canister (`/canister`)
 - **Tech**: Motoko (ICP smart contract)
 - **Storage**: Persistent on-chain
 - **Responsibilities**:

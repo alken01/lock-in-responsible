@@ -14,6 +14,7 @@ backend/dev.db-journal
 backend/logs/
 backend/uploads/
 backend/*.log
+backend/.claude
 
 # ===================================
 # Frontend (React + Vite)
@@ -25,6 +26,7 @@ frontend/build/
 frontend/.env
 frontend/.env.local
 frontend/.vite/
+frontend/.claude
 
 # ===================================
 # Validator Node
@@ -117,8 +119,7 @@ temp/
 
 # DFX build artifacts
 .dfx/
-src/.dfx/
-src/lock_in_backend/.dfx/
+canister/.dfx/
 
 # Canister IDs (local development)
 canister_ids.json
