@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { goalAPI, deviceAPI } from '../lib/api';
+import { goalAPI } from '../lib/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -16,11 +16,6 @@ export default function Goals() {
   const { data: goals = [], isLoading } = useQuery({
     queryKey: ['goals'],
     queryFn: () => goalAPI.list(),
-  });
-
-  const { data: devices = [] } = useQuery({
-    queryKey: ['devices'],
-    queryFn: () => deviceAPI.list(),
   });
 
   const createGoalMutation = useMutation({
@@ -46,7 +41,6 @@ export default function Goals() {
       description: formData.get('description'),
       type: formData.get('type') || 'custom',
       target: parseInt(formData.get('target') as string) || 1,
-      deviceId: formData.get('deviceId') || null,
       verificationType: 'llm',
     });
   };
@@ -129,22 +123,6 @@ export default function Goals() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="deviceId">Link to Device (Optional)</Label>
-                <select
-                  id="deviceId"
-                  name="deviceId"
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                >
-                  <option value="">No device</option>
-                  {devices.map((device: any) => (
-                    <option key={device.id} value={device.id}>
-                      {device.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
               <div className="flex gap-2">
                 <Button type="submit" disabled={createGoalMutation.isPending}>
                   Create Goal
@@ -202,11 +180,6 @@ export default function Goals() {
                         <span className="text-xs text-muted-foreground">
                           Progress: {goal.progress}/{goal.target}
                         </span>
-                        {goal.device && (
-                          <span className="text-xs text-muted-foreground">
-                            📱 {goal.device.name}
-                          </span>
-                        )}
                         <span className="text-xs capitalize px-2 py-0.5 rounded-full bg-primary/10 text-primary">
                           {goal.type.replace('_', ' ')}
                         </span>

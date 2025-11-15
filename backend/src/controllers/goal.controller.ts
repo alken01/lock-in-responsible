@@ -10,16 +10,12 @@ const llmService = new LLMService();
 export class GoalController {
   static async listGoals(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const { status, date, deviceId } = req.query;
+      const { status, date } = req.query;
 
       const where: any = { userId: req.user!.id };
 
       if (status) {
         where.status = status;
-      }
-
-      if (deviceId) {
-        where.deviceId = deviceId;
       }
 
       if (date) {
@@ -36,12 +32,6 @@ export class GoalController {
       const goals = await prisma.goal.findMany({
         where,
         include: {
-          device: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
           verifications: {
             select: {
               id: true,
@@ -70,7 +60,6 @@ export class GoalController {
         description,
         type,
         target,
-        deviceId,
         dueDate,
         verificationType,
         verificationConfig,
@@ -81,39 +70,16 @@ export class GoalController {
         throw new ValidationError('Title and type are required');
       }
 
-      // Verify device belongs to user
-      if (deviceId) {
-        const device = await prisma.device.findFirst({
-          where: {
-            id: deviceId,
-            userId: req.user!.id,
-          },
-        });
-
-        if (!device) {
-          throw new ValidationError('Invalid device ID');
-        }
-      }
-
       const goal = await prisma.goal.create({
         data: {
           title,
           description,
           type,
           target: target || 1,
-          deviceId,
           dueDate: dueDate ? new Date(dueDate) : null,
           verificationType: verificationType || 'manual',
           verificationConfig: verificationConfig || {},
           userId: req.user!.id,
-        },
-        include: {
-          device: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
         },
       });
 
@@ -130,12 +96,6 @@ export class GoalController {
       const goal = await prisma.goal.findUnique({
         where: { id: goalId },
         include: {
-          device: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
           verifications: {
             select: {
               id: true,

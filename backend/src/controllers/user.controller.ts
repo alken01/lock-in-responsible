@@ -17,11 +17,6 @@ export class UserController {
           currentStreak: true,
           longestStreak: true,
           createdAt: true,
-          _count: {
-            select: {
-              devices: true,
-            },
-          },
         },
       });
 
@@ -31,7 +26,6 @@ export class UserController {
           totalGoalsCompleted: user!.totalGoalsCompleted,
           currentStreak: user!.currentStreak,
           longestStreak: user!.longestStreak,
-          devicesOwned: user!._count.devices,
         },
       });
     } catch (error) {
@@ -111,38 +105,6 @@ export class UserController {
       const goalsCompleted = goals.filter((g) => g.status === 'completed').length;
       const completionRate = goalsCreated > 0 ? goalsCompleted / goalsCreated : 0;
 
-      // Get unlock events
-      const unlockLogs = await prisma.deviceLog.findMany({
-        where: {
-          device: {
-            userId: req.user!.id,
-          },
-          eventType: 'unlock_success',
-          timestamp: {
-            gte: startDate,
-          },
-        },
-        select: {
-          timestamp: true,
-        },
-      });
-
-      // Calculate average unlock time
-      let averageUnlockTime = '00:00:00';
-      if (unlockLogs.length > 0) {
-        const totalMinutes = unlockLogs.reduce((sum, log) => {
-          const hours = log.timestamp.getHours();
-          const minutes = log.timestamp.getMinutes();
-          return sum + hours * 60 + minutes;
-        }, 0);
-
-        const avgMinutes = Math.floor(totalMinutes / unlockLogs.length);
-        const hours = Math.floor(avgMinutes / 60);
-        const minutes = avgMinutes % 60;
-        averageUnlockTime = `${hours.toString().padStart(2, '0')}:${minutes
-          .toString()
-          .padStart(2, '0')}:00`;
-      }
 
       // Top goal types
       const goalTypeCounts = goals.reduce((acc: any, goal) => {
@@ -163,8 +125,6 @@ export class UserController {
           completionRate,
           currentStreak: (await prisma.user.findUnique({ where: { id: req.user!.id } }))!
             .currentStreak,
-          totalUnlocks: unlockLogs.length,
-          averageUnlockTime,
           topGoalTypes,
         },
       });

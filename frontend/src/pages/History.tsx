@@ -99,9 +99,6 @@ export default function History() {
                         </span>
                       )}
                       <span>Progress: {goal.progress}/{goal.target}</span>
-                      {goal.device && (
-                        <span>📱 {goal.device.name}</span>
-                      )}
                     </div>
                     {goal.verifications && goal.verifications.length > 0 && (
                       <div className="mt-3 p-3 bg-muted/50 rounded-md">

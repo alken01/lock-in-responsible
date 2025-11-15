@@ -132,7 +132,7 @@ model Integration {
 model AuditLog {
   id         String   @id @default(cuid())
   userId     String?
-  action     String // login, goal_created, device_paired, etc.
+  action     String // login, goal_created, goal_completed, etc.
   resourceId String?
   metadata   Json     @default("{}")
   ipAddress  String?
