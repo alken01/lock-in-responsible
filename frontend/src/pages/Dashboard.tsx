@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { Button } from '../components/ui/button';
@@ -13,14 +13,10 @@ import {
 } from 'lucide-react';
 
 export default function Dashboard() {
-  const { user, logout, fetchUser } = useAuthStore();
+  const { principal, logout } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  useEffect(() => {
-    fetchUser();
-  }, [fetchUser]);
 
   const handleLogout = async () => {
     await logout();
@@ -66,7 +62,7 @@ export default function Dashboard() {
           <div className="flex items-center gap-4">
             <div className="hidden md:flex items-center gap-2 text-sm">
               <span className="text-muted-foreground">Welcome,</span>
-              <span className="font-medium">{user?.name}</span>
+              <span className="font-medium text-xs">{principal?.toString().slice(0, 10)}...</span>
             </div>
             <Button
               variant="ghost"
