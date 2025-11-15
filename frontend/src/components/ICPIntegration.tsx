@@ -63,24 +63,6 @@ export function ICPIntegration() {
     setStats(null);
   };
 
-  const syncGoalToICP = async (goal: any) => {
-    try {
-      setLoading(true);
-      const goalId = await icpGoalAPI.create(
-        goal.title,
-        goal.description || 'Goal from Lock-In',
-        goal.goalType || 'Custom',
-        new Date(goal.deadline)
-      );
-      await loadData();
-      return goalId;
-    } catch (error) {
-      console.error('Failed to sync goal to ICP:', error);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  };
 
   if (!isAuthenticated) {
     return (
