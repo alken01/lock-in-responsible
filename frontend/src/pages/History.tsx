@@ -3,6 +3,7 @@ import { icpGoalAPI } from '../lib/icp-api';
 import { Card, CardContent } from '../components/ui/card';
 import { History as HistoryIcon, CheckCircle2, XCircle, Clock } from 'lucide-react';
 import { format } from 'date-fns';
+import { getStatusBadgeClass, getGoalTypeBadgeClass, getTokenBadgeClass } from '../lib/theme-config';
 
 export default function History() {
   const { data: goals = [], isLoading } = useQuery({
@@ -18,23 +19,11 @@ export default function History() {
     switch (status) {
       case 'Completed':
       case 'Verified':
-        return <CheckCircle2 className="h-5 w-5 text-green-500" />;
+        return <CheckCircle2 className="h-5 w-5 text-neon-green" />;
       case 'Failed':
-        return <XCircle className="h-5 w-5 text-red-500" />;
+        return <XCircle className="h-5 w-5 text-neon-pink" />;
       default:
-        return <Clock className="h-5 w-5 text-yellow-500" />;
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Completed':
-      case 'Verified':
-        return 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400';
-      case 'Failed':
-        return 'bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400';
-      default:
-        return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400';
+        return <Clock className="h-5 w-5 text-neon-cyan" />;
     }
   };
 
@@ -82,24 +71,20 @@ export default function History() {
                           </p>
                         )}
                       </div>
-                      <span
-                        className={`text-xs px-2 py-1 rounded-full capitalize ${getStatusColor(
-                          goal.status
-                        )}`}
-                      >
+                      <span className={getStatusBadgeClass(goal.status)}>
                         {goal.status}
                       </span>
                     </div>
-                    <div className="flex flex-wrap items-center gap-4 mt-2 text-xs text-muted-foreground">
-                      <span>
-                        Created: {format(new Date(goal.createdAt), 'MMM d, yyyy h:mm a')}
+                    <div className="flex flex-wrap items-center gap-2 mt-2 text-xs text-muted-foreground">
+                      <span className="font-mono">
+                        {format(new Date(goal.createdAt), 'MMM d, yyyy h:mm a')}
                       </span>
-                      <span className="capitalize px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                      <span className={getGoalTypeBadgeClass(goal.goalType)}>
                         {goal.goalType}
                       </span>
                       {goal.tokensReward > 0 && (
-                        <span className="px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-800">
-                          {goal.tokensReward} tokens earned
+                        <span className={getTokenBadgeClass()}>
+                          +{goal.tokensReward} TOK
                         </span>
                       )}
                     </div>

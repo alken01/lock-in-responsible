@@ -1,114 +1,45 @@
-import { useState } from 'react';
-import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
-import { useAuthStore } from '../store/authStore';
-import { Button } from '../components/ui/button';
-import {
-  Target,
-  Lock,
-  LogOut,
-  Menu,
-  X,
-  Users
-} from 'lucide-react';
+import { Lock, LogOut } from "lucide-react";
+import { Outlet, useNavigate } from "react-router-dom";
+import { Button } from "../components/ui/button";
+import { useAuthStore } from "../store/authStore";
 
 export default function Dashboard() {
   const { logout } = useAuthStore();
   const navigate = useNavigate();
-  const location = useLocation();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleLogout = async () => {
     await logout();
-    navigate('/login');
-  };
-
-  const navItems = [
-    { path: '/dashboard', icon: Target, label: 'Goals' },
-    { path: '/dashboard/community', icon: Users, label: 'Community' },
-  ];
-
-  const isActive = (path: string) => {
-    return location.pathname === path;
+    navigate("/login");
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pixel-grid">
       {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-14 items-center justify-between px-4">
-          <div className="flex items-center gap-2">
-            <Lock className="h-6 w-6 text-primary" />
-            <span className="font-bold">Lock-In Responsible</span>
+      <header className="sticky top-0 z-50 w-full border-b-2 border-neon-cyan bg-background scanlines">
+        <div className="container flex h-16 items-center justify-between px-4">
+          <div className="flex items-center gap-3">
+            <Lock className="h-6 w-6 text-neon-cyan" />
+            <div className="font-mono">
+              <div className="text-neon-cyan font-bold text-lg">
+                &gt; LOCK_IN_RESPONSIBLE
+              </div>
+              <div className="text-neon-purple text-xs">
+                // Accountability Protocol v1.0
+              </div>
+            </div>
           </div>
-
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-6">
-            {navItems.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`flex items-center gap-2 text-sm font-medium transition-colors hover:text-primary ${
-                  isActive(item.path) ? 'text-primary' : 'text-muted-foreground'
-                }`}
-              >
-                <item.icon className="h-4 w-4" />
-                {item.label}
-              </Link>
-            ))}
-          </nav>
 
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
               size="icon"
               onClick={handleLogout}
-              className="hidden md:flex"
+              className="border-2 border-neon-pink/30 hover:border-neon-pink hover:bg-neon-pink/10 transition-all"
             >
-              <LogOut className="h-4 w-4" />
-            </Button>
-
-            {/* Mobile menu button */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            >
-              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              <LogOut className="h-4 w-4 text-neon-pink" />
             </Button>
           </div>
         </div>
-
-        {/* Mobile Navigation */}
-        {mobileMenuOpen && (
-          <div className="md:hidden border-t">
-            <nav className="container py-4 space-y-2">
-              {navItems.map((item) => (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive(item.path)
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
-                  }`}
-                >
-                  <item.icon className="h-4 w-4" />
-                  {item.label}
-                </Link>
-              ))}
-              <Button
-                variant="ghost"
-                onClick={handleLogout}
-                className="w-full justify-start gap-2 text-sm font-medium text-muted-foreground hover:text-destructive"
-              >
-                <LogOut className="h-4 w-4" />
-                Logout
-              </Button>
-            </nav>
-          </div>
-        )}
       </header>
 
       {/* Main Content */}

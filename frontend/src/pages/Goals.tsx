@@ -10,6 +10,7 @@ import { Badge } from '../components/ui/badge';
 import { Plus, Target, CheckCircle2, Circle, XCircle, Users, ArrowDown, History as HistoryIcon, Clock } from 'lucide-react';
 import { ICPIntegration } from '../components/ICPIntegration';
 import { format } from 'date-fns';
+import { getStatusBadgeClass, getGoalTypeBadgeClass, getTokenBadgeClass } from '../lib/theme-config';
 
 export default function Goals() {
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -145,38 +146,11 @@ export default function Goals() {
     switch (status) {
       case 'Completed':
       case 'Verified':
-        return <CheckCircle2 className="w-5 h-5 text-green-500" />;
+        return <CheckCircle2 className="w-5 h-5 text-neon-green" />;
       case 'Failed':
-        return <XCircle className="w-5 h-5 text-red-500" />;
+        return <XCircle className="w-5 h-5 text-neon-pink" />;
       default:
-        return <Circle className="w-5 h-5 text-gray-400" />;
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Completed':
-      case 'Verified':
-        return 'bg-green-100 text-green-800 border-green-300';
-      case 'Failed':
-        return 'bg-red-100 text-red-800 border-red-300';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-300';
-    }
-  };
-
-  const getGoalTypeColor = (type: string) => {
-    switch (type) {
-      case 'Coding':
-        return 'bg-blue-100 text-blue-800 border-blue-300';
-      case 'Fitness':
-        return 'bg-green-100 text-green-800 border-green-300';
-      case 'Study':
-        return 'bg-purple-100 text-purple-800 border-purple-300';
-      case 'Work':
-        return 'bg-orange-100 text-orange-800 border-orange-300';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-300';
+        return <Circle className="w-5 h-5 text-neon-cyan" />;
     }
   };
 
@@ -202,23 +176,11 @@ export default function Goals() {
     switch (status) {
       case 'Completed':
       case 'Verified':
-        return <CheckCircle2 className="h-5 w-5 text-green-500" />;
+        return <CheckCircle2 className="h-5 w-5 text-neon-green" />;
       case 'Failed':
-        return <XCircle className="h-5 w-5 text-red-500" />;
+        return <XCircle className="h-5 w-5 text-neon-pink" />;
       default:
-        return <Clock className="h-5 w-5 text-yellow-500" />;
-    }
-  };
-
-  const getHistoryStatusColor = (status: string) => {
-    switch (status) {
-      case 'Completed':
-      case 'Verified':
-        return 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400';
-      case 'Failed':
-        return 'bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400';
-      default:
-        return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400';
+        return <Clock className="h-5 w-5 text-neon-cyan" />;
     }
   };
 
@@ -371,16 +333,16 @@ export default function Goals() {
                             {goal.description}
                           </p>
                         )}
-                        <div className="flex items-center gap-4 mt-2">
-                          <span className="text-xs capitalize px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                        <div className="flex items-center gap-2 mt-2 flex-wrap">
+                          <span className={getGoalTypeBadgeClass(goal.goalType)}>
                             {goal.goalType}
                           </span>
-                          <span className="text-xs capitalize px-2 py-0.5 rounded-full bg-muted">
+                          <span className={getStatusBadgeClass(goal.status)}>
                             {goal.status}
                           </span>
                           {goal.tokensReward > 0 && (
-                            <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-800">
-                              {goal.tokensReward} tokens
+                            <span className={getTokenBadgeClass()}>
+                              {goal.tokensReward} TOK
                             </span>
                           )}
                         </div>
@@ -511,24 +473,20 @@ export default function Goals() {
                             </p>
                           )}
                         </div>
-                        <span
-                          className={`text-xs px-2 py-1 rounded-full capitalize whitespace-nowrap ${getHistoryStatusColor(
-                            goal.status
-                          )}`}
-                        >
+                        <span className={`whitespace-nowrap ${getStatusBadgeClass(goal.status)}`}>
                           {goal.status}
                         </span>
                       </div>
-                      <div className="flex flex-wrap items-center gap-3 mt-2 text-xs text-muted-foreground">
-                        <span>
+                      <div className="flex flex-wrap items-center gap-2 mt-2 text-xs text-muted-foreground">
+                        <span className="font-mono">
                           {format(new Date(goal.createdAt), 'MMM d, yyyy h:mm a')}
                         </span>
-                        <span className="capitalize px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                        <span className={getGoalTypeBadgeClass(goal.goalType)}>
                           {goal.goalType}
                         </span>
                         {goal.tokensReward > 0 && (
-                          <span className="px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-800">
-                            {goal.tokensReward} tokens
+                          <span className={getTokenBadgeClass()}>
+                            {goal.tokensReward} TOK
                           </span>
                         )}
                       </div>
@@ -649,15 +607,15 @@ export default function Goals() {
 
                     {/* Badges */}
                     <div className="flex flex-wrap gap-2">
-                      <Badge className={getGoalTypeColor(goal.goalType)}>
+                      <span className={getGoalTypeBadgeClass(goal.goalType)}>
                         {goal.goalType}
-                      </Badge>
-                      <Badge className={getStatusColor(goal.status)}>
+                      </span>
+                      <span className={getStatusBadgeClass(goal.status)}>
                         {goal.status}
-                      </Badge>
-                      <Badge variant="outline">
-                        {goal.tokensReward} tokens
-                      </Badge>
+                      </span>
+                      <span className={getTokenBadgeClass()}>
+                        {goal.tokensReward} TOK
+                      </span>
                     </div>
 
                     {/* Dates */}
