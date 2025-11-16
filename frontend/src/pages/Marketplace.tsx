@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
-import { ShoppingCart, Target, Sparkles, TrendingUp, Code, Dumbbell, BookOpen, Briefcase } from 'lucide-react';
+import { ShoppingCart, Target, Sparkles, TrendingUp, Code, Dumbbell, BookOpen, Briefcase, Shield, Award } from 'lucide-react';
 import { icpGoalAPI } from '../lib/icp-api';
 
 interface GoalTemplate {
@@ -15,6 +15,9 @@ interface GoalTemplate {
   icon: any;
   popular?: boolean;
   difficulty: 'Easy' | 'Medium' | 'Hard';
+  ipRegistered?: boolean;
+  creator?: string;
+  royalties?: number;
 }
 
 const GOAL_TEMPLATES: GoalTemplate[] = [
@@ -27,6 +30,9 @@ const GOAL_TEMPLATES: GoalTemplate[] = [
     icon: Code,
     popular: true,
     difficulty: 'Medium',
+    ipRegistered: true,
+    creator: 'creator.near',
+    royalties: 0.5,
   },
   {
     id: '2',
@@ -37,6 +43,9 @@ const GOAL_TEMPLATES: GoalTemplate[] = [
     icon: Dumbbell,
     popular: true,
     difficulty: 'Easy',
+    ipRegistered: true,
+    creator: 'fitguru.near',
+    royalties: 0.3,
   },
   {
     id: '3',
@@ -56,6 +65,9 @@ const GOAL_TEMPLATES: GoalTemplate[] = [
     icon: Briefcase,
     popular: true,
     difficulty: 'Hard',
+    ipRegistered: true,
+    creator: 'builder.near',
+    royalties: 1.0,
   },
   {
     id: '5',
@@ -154,17 +166,18 @@ export default function Marketplace() {
         </p>
       </div>
 
-      {/* AI-Powered Badge */}
-      <Card className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-950 dark:to-blue-950 border-purple-200">
+      {/* Origin SDK IP Registration Badge */}
+      <Card className="bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 dark:from-blue-950 dark:via-purple-950 dark:to-pink-950 border-2 border-blue-300">
         <CardContent className="py-4">
           <div className="flex items-center gap-3">
-            <Sparkles className="w-6 h-6 text-purple-600" />
-            <div>
-              <p className="font-semibold text-purple-900 dark:text-purple-100">
-                AI-Powered Recommendations
+            <Shield className="w-7 h-7 text-blue-600 flex-shrink-0" />
+            <div className="flex-1">
+              <p className="font-bold text-blue-900 dark:text-blue-100 flex items-center gap-2">
+                Powered by Camp Network Origin SDK
+                <Badge className="bg-blue-600 text-white">IP-Registered</Badge>
               </p>
-              <p className="text-sm text-purple-700 dark:text-purple-300">
-                Our AI analyzes your purchase history and success patterns to recommend templates that match your goals
+              <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                All goal templates are registered as intellectual property on-chain. Creators earn royalties when you purchase their methodologies.
               </p>
             </div>
           </div>
@@ -191,12 +204,24 @@ export default function Marketplace() {
                   </div>
                   <div className="flex-1">
                     <CardTitle className="text-lg">{template.title}</CardTitle>
-                    <div className="flex gap-2 mt-2">
+                    <div className="flex flex-wrap gap-2 mt-2">
                       <Badge variant="outline">{template.goalType}</Badge>
                       <Badge className={getDifficultyColor(template.difficulty)}>
                         {template.difficulty}
                       </Badge>
+                      {template.ipRegistered && (
+                        <Badge className="bg-blue-600 text-white flex items-center gap-1">
+                          <Shield className="w-3 h-3" />
+                          IP Registered
+                        </Badge>
+                      )}
                     </div>
+                    {template.creator && (
+                      <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+                        <Award className="w-3 h-3" />
+                        by {template.creator} • {template.royalties} TOK royalties
+                      </p>
+                    )}
                   </div>
                 </div>
               </CardHeader>
@@ -244,9 +269,20 @@ export default function Marketplace() {
                   <span className="font-bold text-lg">{selectedTemplate.price} TOK</span>
                 </div>
               </div>
-              <div className="bg-blue-50 dark:bg-blue-950 p-3 rounded-lg">
-                <p className="text-sm text-blue-900 dark:text-blue-100">
-                  💡 This template will be added to your goals. You'll still need to complete it and submit proof to earn the 10 TOK reward!
+              <div className="bg-blue-50 dark:bg-blue-950 p-3 rounded-lg border-2 border-blue-200">
+                <div className="flex items-start gap-2 mb-2">
+                  <Shield className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-semibold text-blue-900 dark:text-blue-100">
+                      IP License Purchase via Origin SDK
+                    </p>
+                    <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
+                      You're licensing this productivity methodology as on-chain IP. {selectedTemplate.royalties} TOK goes to creator {selectedTemplate.creator}.
+                    </p>
+                  </div>
+                </div>
+                <p className="text-sm text-blue-900 dark:text-blue-100 border-t border-blue-200 pt-2 mt-2">
+                  💡 Complete this goal and earn 10 TOK reward - that's {Math.round((10 / selectedTemplate.price) * 100)}% ROI!
                 </p>
               </div>
               <div className="flex gap-2">
