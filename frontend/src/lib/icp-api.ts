@@ -20,6 +20,7 @@ const idlFactory = ({ IDL }: any) => {
 
   const GoalStatus = IDL.Variant({
     'Pending': IDL.Null,
+    'InReview': IDL.Null,
     'Completed': IDL.Null,
     'Failed': IDL.Null,
     'Verified': IDL.Null,
@@ -57,6 +58,7 @@ const idlFactory = ({ IDL }: any) => {
     'failGoal': IDL.Func([IDL.Nat], [IDL.Bool], []),
     'getMyGoals': IDL.Func([], [IDL.Vec(Goal)], ['query']),
     'getAllGoals': IDL.Func([], [IDL.Vec(Goal)], ['query']),
+    'getGoalsInReview': IDL.Func([], [IDL.Vec(Goal)], ['query']),
     'getUserGoals': IDL.Func([IDL.Principal], [IDL.Vec(Goal)], ['query']),
     'getGoal': IDL.Func([IDL.Nat], [IDL.Opt(Goal)], ['query']),
     'getMyTokens': IDL.Func([], [IDL.Nat], ['query']),
@@ -99,7 +101,7 @@ export interface ICPGoal {
   goalType: { Custom?: null; Coding?: null; Fitness?: null; Study?: null; Work?: null };
   deadline: bigint;
   createdAt: bigint;
-  status: { Pending?: null; Completed?: null; Failed?: null; Verified?: null };
+  status: { Pending?: null; InReview?: null; Completed?: null; Failed?: null; Verified?: null };
   proof: string[] | [];
   tokensReward: bigint;
 }
@@ -240,6 +242,11 @@ class ICPClient {
     return await this.actor.getAllGoals();
   }
 
+  async getGoalsInReview(): Promise<ICPGoal[]> {
+    if (!this.actor) await this.init();
+    return await this.actor.getGoalsInReview();
+  }
+
   async getUserGoals(userId: Principal): Promise<ICPGoal[]> {
     if (!this.actor) await this.init();
     return await this.actor.getUserGoals(userId);
@@ -372,6 +379,26 @@ export const icpGoalAPI = {
       tokensReward: Number(g.tokensReward),
     }));
     console.log('🌍 Mapped all goals:', mapped);
+    return mapped;
+  },
+
+  listInReview: async () => {
+    console.log('🔍 Fetching goals in review from canister...');
+    const goals = await icpClient.getGoalsInReview();
+    console.log('🔍 Raw goals in review from canister:', goals);
+    const mapped = goals.map(g => ({
+      id: Number(g.id),
+      userId: g.userId.toString(),
+      title: g.title,
+      description: g.description,
+      goalType: Object.keys(g.goalType)[0],
+      deadline: new Date(Number(g.deadline) / 1000000),
+      createdAt: new Date(Number(g.createdAt) / 1000000),
+      status: Object.keys(g.status)[0],
+      proof: g.proof.length > 0 ? g.proof[0] : null,
+      tokensReward: Number(g.tokensReward),
+    }));
+    console.log('🔍 Mapped goals in review:', mapped);
     return mapped;
   },
 

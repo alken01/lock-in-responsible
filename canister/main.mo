@@ -30,6 +30,7 @@ persistent actor LockInResponsible {
 
   type GoalStatus = {
     #Pending;
+    #InReview;
     #Completed;
     #Failed;
     #Verified;
@@ -277,7 +278,7 @@ persistent actor LockInResponsible {
 
         switch (verificationResult) {
           case (?requestId) {
-            // Update goal status to pending verification
+            // Update goal status to in review
             let updatedGoal = {
               id = goal.id;
               userId = goal.userId;
@@ -286,7 +287,7 @@ persistent actor LockInResponsible {
               goalType = goal.goalType;
               deadline = goal.deadline;
               createdAt = goal.createdAt;
-              status = #Pending; // Keep as pending until verified
+              status = #InReview; // Set to InReview while being validated
               proof = ?proof;
               tokensReward = goal.tokensReward;
             };
@@ -366,6 +367,17 @@ persistent actor LockInResponsible {
     let buffer = Buffer.Buffer<Goal>(goals.size());
     for ((_, goal) in goals.entries()) {
       buffer.add(goal);
+    };
+    Buffer.toArray(buffer)
+  };
+
+  // Get all goals that are in review (for validation)
+  public query func getGoalsInReview() : async [Goal] {
+    let buffer = Buffer.Buffer<Goal>(goals.size());
+    for ((_, goal) in goals.entries()) {
+      if (goal.status == #InReview) {
+        buffer.add(goal);
+      };
     };
     Buffer.toArray(buffer)
   };
@@ -658,7 +670,7 @@ persistent actor LockInResponsible {
           };
         };
 
-        // Mark goal as verified if majority approved
+        // Mark goal as verified if majority approved, or failed if rejected
         if (majority) {
           // Update goal status to completed
           switch (goals.get(request.goalId)) {
@@ -691,6 +703,38 @@ persistent actor LockInResponsible {
                 currentStreak = newStreak;
                 longestStreak = if (newStreak > stats.longestStreak) { newStreak } else { stats.longestStreak };
                 totalTokens = currentTokens + goal.tokensReward;
+              };
+              userStats.put(goal.userId, updatedStats);
+            };
+            case null {};
+          };
+        } else {
+          // Majority rejected - mark goal as failed
+          switch (goals.get(request.goalId)) {
+            case (?goal) {
+              let updatedGoal = {
+                id = goal.id;
+                userId = goal.userId;
+                title = goal.title;
+                description = goal.description;
+                goalType = goal.goalType;
+                deadline = goal.deadline;
+                createdAt = goal.createdAt;
+                status = #Failed;
+                proof = ?request.proofText;
+                tokensReward = goal.tokensReward;
+              };
+              goals.put(request.goalId, updatedGoal);
+
+              // Reset streak
+              let stats = getOrCreateUserStats(goal.userId);
+              let updatedStats = {
+                totalGoals = stats.totalGoals;
+                completedGoals = stats.completedGoals;
+                failedGoals = stats.failedGoals + 1;
+                currentStreak = 0;
+                longestStreak = stats.longestStreak;
+                totalTokens = stats.totalTokens;
               };
               userStats.put(goal.userId, updatedStats);
             };
