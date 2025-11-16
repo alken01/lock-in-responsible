@@ -10,6 +10,22 @@ frontend/build/
 frontend/.vite/
 frontend/.claude
 
+# Environment variables (keep only .env.example)
+.env
+.env.local
+.env.*.local
+.env.production
+.env.development
+frontend/.env
+frontend/.env.local
+frontend/.env.*.local
+frontend/.env.production
+frontend/.env.development
+validator-node/.env
+validator-node/.env.local
+validator-node/.env.*.local
+validator-node/.env.production
+
 # ===================================
 # Validator Node
 # ===================================
