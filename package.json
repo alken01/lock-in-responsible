@@ -1,0 +1,39 @@
+{
+  "name": "lock-in-responsible-camp",
+  "version": "1.0.0",
+  "description": "Decentralized goal accountability on Camp Network with AI-powered verification",
+  "main": "hardhat.config.js",
+  "scripts": {
+    "compile": "hardhat compile",
+    "deploy:testnet": "hardhat run scripts/deploy.js --network campTestnet",
+    "deploy:testnet-v2": "hardhat run scripts/deploy.js --network campTestnetV2",
+    "deploy:local": "hardhat run scripts/deploy.js --network localhost",
+    "verify": "hardhat verify --network campTestnet",
+    "console:testnet": "hardhat console --network campTestnet",
+    "node": "hardhat node",
+    "test": "hardhat test",
+    "clean": "hardhat clean",
+    "frontend:dev": "cd frontend && npm run dev",
+    "frontend:build": "cd frontend && npm run build",
+    "setup": "npm install && cd frontend && npm install"
+  },
+  "keywords": [
+    "blockchain",
+    "camp-network",
+    "goals",
+    "accountability",
+    "defi",
+    "origin-sdk"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "@nomicfoundation/hardhat-verify": "^2.0.0",
+    "hardhat": "^2.19.0"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.0.0",
+    "dotenv": "^16.3.1"
+  }
+}

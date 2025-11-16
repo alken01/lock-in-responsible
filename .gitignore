@@ -102,3 +102,28 @@ deps/
 # Canister IDs (local development)
 canister_ids.json
 .ic-assets.json
+
+# ===================================
+# Hardhat / EVM / Camp Network
+# ===================================
+
+# Environment variables (IMPORTANT: contains private keys!)
+.env
+.env.local
+.env.*.local
+
+# Hardhat build artifacts
+cache/
+artifacts/
+typechain/
+typechain-types/
+
+# Deployment info (may contain sensitive data)
+deployment-info.json
+deployments/
+
+# Hardhat coverage
+coverage.json
+
+# Hardhat gas reports
+gas-report.txt
