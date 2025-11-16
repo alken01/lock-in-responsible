@@ -19,7 +19,6 @@ export function ICPIntegration() {
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [icpGoals, setIcpGoals] = useState<any[]>([]);
-  const [showDetailedStats, setShowDetailedStats] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -63,14 +62,6 @@ export function ICPIntegration() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleLogout = async () => {
-    await icpClient.logout();
-    setIsAuthenticated(false);
-    setPrincipal("");
-    setTokens(0);
-    setStats(null);
   };
 
   if (!isAuthenticated) {
