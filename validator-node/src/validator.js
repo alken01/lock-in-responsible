@@ -27,7 +27,9 @@ export class Validator {
       await this.agent.fetchRootKey();
     }
 
-    // TODO: Create actor with proper IDL
+    // ⚠️ NOT IMPLEMENTED: Create actor with proper IDL
+    // This requires the canister to expose verification endpoints
+    // See validator-node/README.md for details
     // this.actor = Actor.createActor(idlFactory, {
     //   agent: this.agent,
     //   canisterId: this.config.canisterId,
@@ -43,10 +45,11 @@ export class Validator {
   async listenForRequests() {
     while (this.isRunning) {
       try {
-        // Poll canister for pending verification requests
+        // ⚠️ NOT IMPLEMENTED: Poll canister for pending verification requests
+        // This requires the canister to expose a getPendingVerificationRequests() endpoint
         // const requests = await this.actor.getPendingRequests();
 
-        // For now, simulating
+        // Currently returning empty array (non-functional)
         const requests = [];
 
         for (const request of requests) {
@@ -100,6 +103,7 @@ export class Validator {
 
       // 3. Submit verdict to canister
       console.log('📤 Submitting verdict to ICP...');
+      // ⚠️ NOT IMPLEMENTED: Submit verdict requires canister endpoint
       // await this.actor.submitVerdict(
       //   request.id,
       //   verdict.verified,
@@ -117,8 +121,9 @@ export class Validator {
   }
 
   async downloadProof(proofUrl) {
-    // Download proof from IPFS/HTTP
-    // For now, return mock data
+    // ⚠️ NOT IMPLEMENTED: Download proof from IPFS/HTTP
+    // Would need integration with storage layer (IPFS, etc.)
+    // Currently returning mock data
     return {
       text: "I coded for 2 hours on my project",
       screenshot: null
