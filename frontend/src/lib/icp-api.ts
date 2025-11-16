@@ -266,6 +266,22 @@ class ICPClient {
     return await this.actor.getLeaderboard();
   }
 
+  // Verification methods
+  async getPendingRequests(): Promise<any[]> {
+    if (!this.actor) await this.init();
+    return await this.actor.getPendingRequests();
+  }
+
+  async submitVerdict(
+    requestId: number,
+    verified: boolean,
+    confidence: number,
+    reasoning: string
+  ): Promise<boolean> {
+    if (!this.actor) await this.init();
+    return await this.actor.submitVerdict(BigInt(requestId), verified, BigInt(confidence), reasoning);
+  }
+
   async healthCheck(): Promise<boolean> {
     if (!this.actor) await this.init();
     return await this.actor.healthCheck();
