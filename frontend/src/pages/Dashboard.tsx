@@ -4,8 +4,6 @@ import { useAuthStore } from '../store/authStore';
 import { Button } from '../components/ui/button';
 import {
   Target,
-  History,
-  Settings,
   Lock,
   LogOut,
   Menu,
@@ -14,7 +12,7 @@ import {
 } from 'lucide-react';
 
 export default function Dashboard() {
-  const { principal, logout } = useAuthStore();
+  const { logout } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -27,8 +25,6 @@ export default function Dashboard() {
   const navItems = [
     { path: '/dashboard', icon: Target, label: 'Goals' },
     { path: '/dashboard/community', icon: Users, label: 'Community' },
-    { path: '/dashboard/history', icon: History, label: 'History' },
-    { path: '/dashboard/settings', icon: Settings, label: 'Settings' },
   ];
 
   const isActive = (path: string) => {
@@ -62,10 +58,6 @@ export default function Dashboard() {
           </nav>
 
           <div className="flex items-center gap-4">
-            <div className="hidden md:flex items-center gap-2 text-sm">
-              <span className="text-muted-foreground">Welcome,</span>
-              <span className="font-medium text-xs">{principal?.toString().slice(0, 10)}...</span>
-            </div>
             <Button
               variant="ghost"
               size="icon"

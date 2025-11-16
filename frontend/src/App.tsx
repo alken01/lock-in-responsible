@@ -5,9 +5,7 @@ import { useAuthStore } from './store/authStore';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Goals from './pages/Goals';
-import Community from './pages/Community';
 import History from './pages/History';
-import Settings from './pages/Settings';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -60,9 +58,8 @@ function App() {
             }
           >
             <Route index element={<Goals />} />
-            <Route path="community" element={<Community />} />
+            <Route path="community" element={<Goals />} />
             <Route path="history" element={<History />} />
-            <Route path="settings" element={<Settings />} />
           </Route>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />

@@ -182,11 +182,18 @@ class ICPClient {
     title: string,
     description: string,
     goalType: 'Custom' | 'Coding' | 'Fitness' | 'Study' | 'Work',
-    deadline: Date
+    deadline?: Date
   ): Promise<bigint> {
     if (!this.actor) await this.init();
     const goalTypeVariant = { [goalType]: null };
-    const deadlineNano = BigInt(deadline.getTime() * 1000000);
+
+    // Use provided deadline or default to end of today
+    const finalDeadline = deadline || new Date();
+    if (!deadline) {
+      finalDeadline.setHours(23, 59, 59, 999);
+    }
+    const deadlineNano = BigInt(finalDeadline.getTime() * 1000000);
+
     return await this.actor.createGoal(title, description, goalTypeVariant, deadlineNano);
   }
 
@@ -252,7 +259,7 @@ export const icpClient = new ICPClient();
 
 // Helper functions
 export const icpGoalAPI = {
-  create: async (title: string, description: string, goalType: any, deadline: Date) => {
+  create: async (title: string, description: string, goalType: any, deadline?: Date) => {
     const goalId = await icpClient.createGoal(title, description, goalType, deadline);
     return Number(goalId);
   },

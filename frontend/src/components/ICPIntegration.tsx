@@ -172,15 +172,37 @@ export function ICPIntegration() {
               </div>
             )}
 
-            <div className="pt-2 border-t">
-              <Button
-                onClick={handleLogout}
-                variant="outline"
-                size="sm"
-                className="w-full"
-              >
-                Disconnect
-              </Button>
+            {/* Settings Section */}
+            <div className="pt-4 border-t space-y-4">
+              <h3 className="text-sm font-semibold">Settings</h3>
+
+              {/* Principal ID */}
+              <div className="p-3 bg-white rounded-lg border">
+                <p className="text-xs text-gray-600 mb-1">Principal ID</p>
+                <p className="text-xs font-mono break-all">{principal}</p>
+              </div>
+
+              {/* Stats Grid */}
+              {stats && (
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="p-2 bg-white rounded border">
+                    <p className="text-xs text-gray-600">Total Goals</p>
+                    <p className="text-lg font-bold">{stats.totalGoals}</p>
+                  </div>
+                  <div className="p-2 bg-white rounded border">
+                    <p className="text-xs text-gray-600">Failed</p>
+                    <p className="text-lg font-bold">{stats.failedGoals}</p>
+                  </div>
+                  <div className="p-2 bg-white rounded border">
+                    <p className="text-xs text-gray-600">Longest Streak</p>
+                    <p className="text-lg font-bold">{stats.longestStreak}</p>
+                  </div>
+                  <div className="p-2 bg-white rounded border">
+                    <p className="text-xs text-gray-600">Total Tokens</p>
+                    <p className="text-lg font-bold">{stats.totalTokens}</p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </CardContent>
