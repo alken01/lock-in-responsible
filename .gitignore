@@ -7,8 +7,6 @@
 frontend/node_modules/
 frontend/dist/
 frontend/build/
-frontend/.env
-frontend/.env.local
 frontend/.vite/
 frontend/.claude
 
@@ -18,8 +16,6 @@ frontend/.claude
 
 validator-node/node_modules/
 validator-node/dist/
-validator-node/.env
-validator-node/.env.local
 validator-node/logs/
 validator-node/*.log
 
@@ -76,11 +72,6 @@ tmp/
 temp/
 *.tmp
 
-# Environment
-.env
-.env.local
-.env.*.local
-
 # Database
 *.db
 *.db-journal
@@ -111,6 +102,3 @@ deps/
 # Canister IDs (local development)
 canister_ids.json
 .ic-assets.json
-
-# ICP environment
-.env.icp
