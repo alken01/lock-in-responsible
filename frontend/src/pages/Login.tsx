@@ -1,9 +1,15 @@
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../store/authStore';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { Button } from '../components/ui/button';
-import { Lock, Shield } from 'lucide-react';
+import { Lock, Shield } from "lucide-react";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "../components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { useAuthStore } from "../store/authStore";
 
 export default function Login() {
   const { login, isAuthenticated, isLoading } = useAuthStore();
@@ -11,28 +17,22 @@ export default function Login() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/dashboard');
+      navigate("/dashboard");
     }
   }, [isAuthenticated, navigate]);
 
   const handleLogin = async () => {
     try {
       await login();
-      navigate('/dashboard');
+      navigate("/dashboard");
     } catch (error) {
-      console.error('Login failed:', error);
+      console.error("Login failed:", error);
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4 overflow-x-hidden">
       <Card className="w-full max-w-md border-2 border-neon-cyan/50 shadow-neon-cyan scanlines relative">
-        <div className="absolute top-0 left-0 text-neon-cyan text-xs font-mono px-2">
-          ┌─ AUTH ─┐
-        </div>
-        <div className="absolute bottom-0 right-0 text-neon-cyan text-xs font-mono px-2">
-          └────────┘
-        </div>
         <CardHeader className="space-y-4 pt-6">
           <div className="flex justify-center">
             <div className="h-16 w-16 bg-neon-cyan/20 border-2 border-neon-cyan flex items-center justify-center">
@@ -61,7 +61,7 @@ export default function Login() {
                 className="w-full max-w-xs bg-neon-cyan text-black hover:shadow-neon-cyan font-mono font-bold"
               >
                 <Shield className="mr-2 h-5 w-5" />
-                {isLoading ? '&gt; CONNECTING...' : '&gt; LOGIN_WITH_II'}
+                {isLoading ? "> CONNECTING..." : "> LOGIN_WITH_II"}
               </Button>
             </div>
           </div>
@@ -77,10 +77,16 @@ export default function Login() {
               [ HOW IT WORKS ]
             </div>
             <ul className="text-xs space-y-1 text-muted-foreground font-mono mt-2">
-              <li className="text-neon-green">+ Set goals on-chain (immutable)</li>
+              <li className="text-neon-green">
+                + Set goals on-chain (immutable)
+              </li>
               <li className="text-neon-cyan">+ Submit proof of completion</li>
-              <li className="text-neon-purple">+ AI validators verify proofs</li>
-              <li className="text-neon-pink">+ Earn tokens for completed goals</li>
+              <li className="text-neon-purple">
+                + AI validators verify proofs
+              </li>
+              <li className="text-neon-pink">
+                + Earn tokens for completed goals
+              </li>
               <li className="text-neon-green">+ Build streaks & compete</li>
             </ul>
           </div>
@@ -93,7 +99,8 @@ export default function Login() {
               <Shield className="h-4 w-4 text-neon-cyan mt-0.5" />
               <div className="space-y-1">
                 <p className="text-xs text-muted-foreground font-mono">
-                  Secure, anonymous auth using device biometrics (fingerprint, Face ID) or security keys. No passwords, no email required.
+                  Secure, anonymous auth using device biometrics (fingerprint,
+                  Face ID) or security keys. No passwords, no email required.
                 </p>
               </div>
             </div>
