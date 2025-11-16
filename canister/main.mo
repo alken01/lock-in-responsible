@@ -163,6 +163,17 @@ persistent actor LockInResponsible {
     }
   };
 
+  // Helper: Count eligible validators
+  private func getEligibleValidatorsCount() : Nat {
+    var count = 0;
+    for ((userId, stats) in userStats.entries()) {
+      if (stats.completedGoals > 0) {
+        count += 1;
+      };
+    };
+    count
+  };
+
   // Create a new goal (on-chain storage!)
   public shared(msg) func createGoal(
     title: Text,
@@ -222,7 +233,46 @@ persistent actor LockInResponsible {
           return false;
         };
 
-        // Create verification request instead of immediately completing
+        // Check if there are any eligible validators
+        let eligibleValidators = getEligibleValidatorsCount();
+
+        // If no validators exist, auto-approve the goal
+        if (eligibleValidators == 0) {
+          let updatedGoal = {
+            id = goal.id;
+            userId = goal.userId;
+            title = goal.title;
+            description = goal.description;
+            goalType = goal.goalType;
+            deadline = goal.deadline;
+            createdAt = goal.createdAt;
+            status = #Completed; // Auto-approve when no validators
+            proof = ?proof;
+            tokensReward = goal.tokensReward;
+          };
+          goals.put(goalId, updatedGoal);
+
+          // Award tokens
+          let currentTokens = Option.get(userTokens.get(goal.userId), 0);
+          userTokens.put(goal.userId, currentTokens + goal.tokensReward);
+
+          // Update user stats
+          let stats = getOrCreateUserStats(goal.userId);
+          let newStreak = stats.currentStreak + 1;
+          let updatedStats = {
+            totalGoals = stats.totalGoals;
+            completedGoals = stats.completedGoals + 1;
+            failedGoals = stats.failedGoals;
+            currentStreak = newStreak;
+            longestStreak = if (newStreak > stats.longestStreak) { newStreak } else { stats.longestStreak };
+            totalTokens = currentTokens + goal.tokensReward;
+          };
+          userStats.put(goal.userId, updatedStats);
+
+          return true;
+        };
+
+        // Create verification request if validators exist
         let verificationResult = await createVerificationRequest(goalId, proof, null);
 
         switch (verificationResult) {

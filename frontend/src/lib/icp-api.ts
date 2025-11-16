@@ -394,7 +394,15 @@ export const icpGoalAPI = {
   },
 
   submitProof: async (goalId: number, proof: string) => {
-    return await icpClient.submitProof(goalId, proof);
+    console.log('🎯 Submitting proof for goal:', goalId, 'proof:', proof);
+    try {
+      const result = await icpClient.submitProof(goalId, proof);
+      console.log('🎯 Submit proof result:', result);
+      return result;
+    } catch (error) {
+      console.error('❌ Failed to submit proof:', error);
+      throw error;
+    }
   },
 
   fail: async (goalId: number) => {
