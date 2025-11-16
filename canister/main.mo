@@ -222,39 +222,29 @@ persistent actor LockInResponsible {
           return false;
         };
 
-        // Update goal with proof
-        let updatedGoal = {
-          id = goal.id;
-          userId = goal.userId;
-          title = goal.title;
-          description = goal.description;
-          goalType = goal.goalType;
-          deadline = goal.deadline;
-          createdAt = goal.createdAt;
-          status = #Completed;
-          proof = ?proof;
-          tokensReward = goal.tokensReward;
-        };
-        goals.put(goalId, updatedGoal);
+        // Create verification request instead of immediately completing
+        let verificationResult = await createVerificationRequest(goalId, proof, null);
 
-        // Award tokens!
-        let currentTokens = Option.get(userTokens.get(caller), 0);
-        userTokens.put(caller, currentTokens + goal.tokensReward);
-
-        // Update stats
-        let stats = getOrCreateUserStats(caller);
-        let newStreak = stats.currentStreak + 1;
-        let updatedStats = {
-          totalGoals = stats.totalGoals;
-          completedGoals = stats.completedGoals + 1;
-          failedGoals = stats.failedGoals;
-          currentStreak = newStreak;
-          longestStreak = if (newStreak > stats.longestStreak) { newStreak } else { stats.longestStreak };
-          totalTokens = currentTokens + goal.tokensReward;
-        };
-        userStats.put(caller, updatedStats);
-
-        true
+        switch (verificationResult) {
+          case (?requestId) {
+            // Update goal status to pending verification
+            let updatedGoal = {
+              id = goal.id;
+              userId = goal.userId;
+              title = goal.title;
+              description = goal.description;
+              goalType = goal.goalType;
+              deadline = goal.deadline;
+              createdAt = goal.createdAt;
+              status = #Pending; // Keep as pending until verified
+              proof = ?proof;
+              tokensReward = goal.tokensReward;
+            };
+            goals.put(goalId, updatedGoal);
+            true
+          };
+          case null { false };
+        }
       };
       case null { false };
     }
@@ -530,8 +520,11 @@ persistent actor LockInResponsible {
 
         verificationRequests.put(requestId, updatedRequest);
 
-        // If we have 3+ verdicts, calculate consensus
-        if (updatedRequest.verdicts.size() >= 3) {
+        // Calculate consensus when all validators have voted or we have enough votes
+        let totalValidators = updatedRequest.validators.size();
+        let requiredVotes = if (totalValidators >= 5) { 3 } else { (totalValidators + 1) / 2 };
+
+        if (updatedRequest.verdicts.size() >= totalValidators or updatedRequest.verdicts.size() >= requiredVotes) {
           ignore calculateConsensus(requestId);
         };
 
@@ -541,26 +534,24 @@ persistent actor LockInResponsible {
     }
   };
 
-  // Get pending verification requests (for validators)
+  // Get pending verification requests (for users to vote on)
   public query(msg) func getPendingRequests() : async [VerificationRequest] {
     let caller = msg.caller;
 
-    // Verify caller is a validator
-    switch (validators.get(caller)) {
-      case (?validator) {
-        let buffer = Buffer.Buffer<VerificationRequest>(0);
-        for ((_, request) in verificationRequests.entries()) {
-          if (request.status == #Pending) {
-            // Check if caller is a selected validator
-            if (Array.find<ValidatorId>(request.validators, func(v) { v == caller }) != null) {
-              buffer.add(request);
-            };
+    let buffer = Buffer.Buffer<VerificationRequest>(0);
+    for ((_, request) in verificationRequests.entries()) {
+      if (request.status == #Pending) {
+        // Check if caller is a selected validator for this request
+        if (Array.find<ValidatorId>(request.validators, func(v) { v == caller }) != null) {
+          // Check if caller hasn't voted yet
+          let hasVoted = Array.find<Verdict>(request.verdicts, func(verdict) { verdict.validator == caller });
+          if (hasVoted == null) {
+            buffer.add(request);
           };
         };
-        Buffer.toArray(buffer)
       };
-      case null { [] };
-    }
+    };
+    Buffer.toArray(buffer)
   };
 
   // Calculate consensus and distribute rewards
@@ -575,8 +566,16 @@ persistent actor LockInResponsible {
           };
         };
 
-        // Majority = 3/5
-        let majority = verifiedCount >= 3;
+        // Calculate required votes based on validator count
+        let totalValidators = request.validators.size();
+        let requiredVotes = if (totalValidators >= 5) {
+          3 // At least 3/5 if we have 5 validators
+        } else {
+          // More than (n-1)/2 for fewer validators
+          (totalValidators + 1) / 2 // This gives us ceiling of n/2
+        };
+
+        let majority = verifiedCount >= requiredVotes;
 
         // Update validators and distribute rewards
         let rewardPerValidator = request.fee / request.verdicts.size();
@@ -631,6 +630,19 @@ persistent actor LockInResponsible {
               // Award tokens
               let currentTokens = Option.get(userTokens.get(goal.userId), 0);
               userTokens.put(goal.userId, currentTokens + goal.tokensReward);
+
+              // Update user stats
+              let stats = getOrCreateUserStats(goal.userId);
+              let newStreak = stats.currentStreak + 1;
+              let updatedStats = {
+                totalGoals = stats.totalGoals;
+                completedGoals = stats.completedGoals + 1;
+                failedGoals = stats.failedGoals;
+                currentStreak = newStreak;
+                longestStreak = if (newStreak > stats.longestStreak) { newStreak } else { stats.longestStreak };
+                totalTokens = currentTokens + goal.tokensReward;
+              };
+              userStats.put(goal.userId, updatedStats);
             };
             case null {};
           };
@@ -657,9 +669,18 @@ persistent actor LockInResponsible {
     }
   };
 
-  // Helper: Select random validators
+  // Helper: Select random validators from users who have submitted proofs
   private func selectRandomValidators(count: Nat) : [ValidatorId] {
-    let available = Buffer.toArray(activeValidators);
+    // Get all users who have completed at least one goal
+    let eligibleUsers = Buffer.Buffer<ValidatorId>(0);
+
+    for ((userId, stats) in userStats.entries()) {
+      if (stats.completedGoals > 0) {
+        eligibleUsers.add(userId);
+      };
+    };
+
+    let available = Buffer.toArray(eligibleUsers);
 
     if (available.size() <= count) {
       return available;

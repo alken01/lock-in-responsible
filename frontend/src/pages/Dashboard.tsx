@@ -10,7 +10,8 @@ import {
   LogOut,
   Menu,
   X,
-  Users
+  Users,
+  ThumbsUp
 } from 'lucide-react';
 
 export default function Dashboard() {
@@ -27,6 +28,7 @@ export default function Dashboard() {
   const navItems = [
     { path: '/dashboard', icon: Target, label: 'Goals' },
     { path: '/dashboard/community', icon: Users, label: 'Community' },
+    { path: '/dashboard/voting', icon: ThumbsUp, label: 'Voting' },
     { path: '/dashboard/history', icon: History, label: 'History' },
     { path: '/dashboard/settings', icon: Settings, label: 'Settings' },
   ];

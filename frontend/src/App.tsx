@@ -8,6 +8,7 @@ import Goals from './pages/Goals';
 import Community from './pages/Community';
 import History from './pages/History';
 import Settings from './pages/Settings';
+import Voting from './pages/Voting';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -61,6 +62,7 @@ function App() {
           >
             <Route index element={<Goals />} />
             <Route path="community" element={<Community />} />
+            <Route path="voting" element={<Voting />} />
             <Route path="history" element={<History />} />
             <Route path="settings" element={<Settings />} />
           </Route>
