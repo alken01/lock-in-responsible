@@ -55,6 +55,8 @@ const idlFactory = ({ IDL }: any) => {
     'submitProof': IDL.Func([IDL.Nat, IDL.Text], [IDL.Bool], []),
     'failGoal': IDL.Func([IDL.Nat], [IDL.Bool], []),
     'getMyGoals': IDL.Func([], [IDL.Vec(Goal)], ['query']),
+    'getAllGoals': IDL.Func([], [IDL.Vec(Goal)], ['query']),
+    'getUserGoals': IDL.Func([IDL.Principal], [IDL.Vec(Goal)], ['query']),
     'getGoal': IDL.Func([IDL.Nat], [IDL.Opt(Goal)], ['query']),
     'getMyTokens': IDL.Func([], [IDL.Nat], ['query']),
     'getMyStats': IDL.Func([], [UserStats], ['query']),
@@ -203,6 +205,16 @@ class ICPClient {
     return await this.actor.getMyGoals();
   }
 
+  async getAllGoals(): Promise<ICPGoal[]> {
+    if (!this.actor) await this.init();
+    return await this.actor.getAllGoals();
+  }
+
+  async getUserGoals(userId: Principal): Promise<ICPGoal[]> {
+    if (!this.actor) await this.init();
+    return await this.actor.getUserGoals(userId);
+  }
+
   async getGoal(goalId: number): Promise<ICPGoal | null> {
     if (!this.actor) await this.init();
     const result = await this.actor.getGoal(BigInt(goalId));
@@ -251,6 +263,7 @@ export const icpGoalAPI = {
     console.log('📋 Raw goals from canister:', goals);
     const mapped = goals.map(g => ({
       id: Number(g.id),
+      userId: g.userId.toString(),
       title: g.title,
       description: g.description,
       goalType: Object.keys(g.goalType)[0],
@@ -262,6 +275,44 @@ export const icpGoalAPI = {
     }));
     console.log('📋 Mapped goals:', mapped);
     return mapped;
+  },
+
+  listAll: async () => {
+    console.log('🌍 Fetching all goals from canister...');
+    const goals = await icpClient.getAllGoals();
+    console.log('🌍 Raw all goals from canister:', goals);
+    const mapped = goals.map(g => ({
+      id: Number(g.id),
+      userId: g.userId.toString(),
+      title: g.title,
+      description: g.description,
+      goalType: Object.keys(g.goalType)[0],
+      deadline: new Date(Number(g.deadline) / 1000000),
+      createdAt: new Date(Number(g.createdAt) / 1000000),
+      status: Object.keys(g.status)[0],
+      proof: g.proof.length > 0 ? g.proof[0] : null,
+      tokensReward: Number(g.tokensReward),
+    }));
+    console.log('🌍 Mapped all goals:', mapped);
+    return mapped;
+  },
+
+  listByUser: async (userId: string) => {
+    console.log('👤 Fetching user goals from canister...');
+    const principal = Principal.fromText(userId);
+    const goals = await icpClient.getUserGoals(principal);
+    return goals.map(g => ({
+      id: Number(g.id),
+      userId: g.userId.toString(),
+      title: g.title,
+      description: g.description,
+      goalType: Object.keys(g.goalType)[0],
+      deadline: new Date(Number(g.deadline) / 1000000),
+      createdAt: new Date(Number(g.createdAt) / 1000000),
+      status: Object.keys(g.status)[0],
+      proof: g.proof.length > 0 ? g.proof[0] : null,
+      tokensReward: Number(g.tokensReward),
+    }));
   },
 
   submitProof: async (goalId: number, proof: string) => {
