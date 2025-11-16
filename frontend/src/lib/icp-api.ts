@@ -6,6 +6,7 @@ import { Principal } from '@dfinity/principal';
 const CANISTER_ID = import.meta.env.VITE_CANISTER_ID;
 const ICP_HOST = import.meta.env.VITE_HOST;
 const II_PROVIDER = import.meta.env.VITE_II_PROVIDER;
+const ICP_LEDGER_CANISTER_ID = import.meta.env.VITE_ICP_LEDGER_CANISTER_ID;
 
 // IDL (Interface Definition Language) for the canister
 const idlFactory = ({ IDL }: any) => {
@@ -75,6 +76,21 @@ const idlFactory = ({ IDL }: any) => {
   });
 };
 
+// ICP Ledger IDL
+const ledgerIdlFactory = ({ IDL }: any) => {
+  const AccountBalanceArgs = IDL.Record({
+    account: IDL.Vec(IDL.Nat8),
+  });
+
+  const Tokens = IDL.Record({
+    e8s: IDL.Nat64,
+  });
+
+  return IDL.Service({
+    account_balance: IDL.Func([AccountBalanceArgs], [Tokens], ['query']),
+  });
+};
+
 export interface ICPGoal {
   id: bigint;
   userId: Principal;
@@ -100,6 +116,7 @@ export interface ICPUserStats {
 class ICPClient {
   private authClient: AuthClient | null = null;
   private actor: any = null;
+  private ledgerActor: any = null;
   private agent: HttpAgent | null = null;
 
   async init() {
@@ -132,6 +149,12 @@ class ICPClient {
       this.actor = Actor.createActor(idlFactory, {
         agent: this.agent,
         canisterId: CANISTER_ID,
+      });
+
+      console.log('💰 Creating ledger actor');
+      this.ledgerActor = Actor.createActor(ledgerIdlFactory, {
+        agent: this.agent,
+        canisterId: ICP_LEDGER_CANISTER_ID,
       });
     }
   }
@@ -252,6 +275,38 @@ class ICPClient {
     if (!this.actor) await this.init();
     return await this.actor.getInfo();
   }
+
+  // Helper function to convert Principal to Account Identifier
+  private principalToAccountIdentifier(principal: Principal): Uint8Array {
+    // Simple account identifier: just use the principal bytes
+    // Note: In production, you'd use proper account identifier generation with SHA-224
+    // and support for subaccounts
+    const principalBytes = principal.toUint8Array();
+    const account = new Uint8Array(32);
+    account.set(principalBytes.slice(0, Math.min(principalBytes.length, 32)));
+
+    return account;
+  }
+
+  async getICPBalance(): Promise<number> {
+    if (!this.ledgerActor) await this.init();
+
+    try {
+      const principal = await this.getPrincipal();
+      if (!principal) return 0;
+
+      const accountId = this.principalToAccountIdentifier(principal);
+      const balance = await this.ledgerActor.account_balance({
+        account: Array.from(accountId),
+      });
+
+      // Convert from e8s to ICP (1 ICP = 100,000,000 e8s)
+      return Number(balance.e8s) / 100000000;
+    } catch (error) {
+      console.error('Failed to get ICP balance:', error);
+      return 0;
+    }
+  }
 }
 
 // Singleton instance
@@ -335,6 +390,10 @@ export const icpTokenAPI = {
   getBalance: async () => {
     const balance = await icpClient.getMyTokens();
     return Number(balance);
+  },
+
+  getICPBalance: async () => {
+    return await icpClient.getICPBalance();
   },
 
   getStats: async () => {

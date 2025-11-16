@@ -15,9 +15,11 @@ export function ICPIntegration() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [principal, setPrincipal] = useState<string>("");
   const [tokens, setTokens] = useState<number>(0);
+  const [icpBalance, setIcpBalance] = useState<number>(0);
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [icpGoals, setIcpGoals] = useState<any[]>([]);
+  const [showDetailedStats, setShowDetailedStats] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -36,12 +38,14 @@ export function ICPIntegration() {
 
   const loadData = async () => {
     try {
-      const [tokenBalance, userStats, goals] = await Promise.all([
+      const [tokenBalance, icpBal, userStats, goals] = await Promise.all([
         icpTokenAPI.getBalance(),
+        icpTokenAPI.getICPBalance(),
         icpTokenAPI.getStats(),
         icpGoalAPI.list(),
       ]);
       setTokens(tokenBalance);
+      setIcpBalance(icpBal);
       setStats(userStats);
       setIcpGoals(goals);
     } catch (error) {
@@ -140,60 +144,95 @@ export function ICPIntegration() {
         <CardContent className="pt-0">
           <div className="space-y-4">
             {/* Principal ID Display */}
-            <div className="p-3 bg-secondary border-2 border-neon-cyan/20">
-              <p className="text-[10px] text-muted-foreground font-mono mb-1">// PRINCIPAL_ID</p>
-              <p className="text-xs font-mono text-neon-cyan break-all leading-relaxed">{principal}</p>
+            <div className="p-3 bg-secondary border-2 border-neon-cyan/30 relative">
+              <div className="absolute -top-2 left-2 bg-card px-2 text-neon-cyan text-[10px] font-mono border border-neon-cyan/30">
+                [ PRINCIPAL ]
+              </div>
+              <p className="text-[10px] text-muted-foreground font-mono mb-1 mt-2">
+                // IDENTITY
+              </p>
+              <p className="text-xs font-mono text-neon-cyan break-all leading-relaxed">
+                {principal}
+              </p>
             </div>
 
-            {/* Token Balance */}
-            <div className="p-4 bg-secondary border-2 border-neon-purple/30 relative">
-              <div className="absolute -top-2 left-2 bg-card px-2 text-neon-purple text-[10px] font-mono border border-neon-purple/30">
-                [ TOKEN BALANCE ]
-              </div>
-              <div className="flex items-center justify-between mt-2">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-neon-purple/20 border-2 border-neon-purple/50">
-                    <Coins className="h-6 w-6 text-neon-purple" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground font-mono">
-                      // ACCOUNTABILITY
-                    </p>
-                    <p className="text-3xl font-bold text-neon-purple font-mono">
-                      {tokens}
-                    </p>
-                  </div>
+            {/* Balances Grid */}
+            <div className="grid grid-cols-2 gap-3">
+              {/* ICP Balance */}
+              <div className="p-4 bg-secondary border-2 border-neon-cyan/30 relative">
+                <div className="absolute -top-2 left-2 bg-card px-2 text-neon-cyan text-[10px] font-mono border border-neon-cyan/30">
+                  [ ICP ]
                 </div>
-                <div className="text-right">
-                  <p className="text-xs text-muted-foreground font-mono">TOK</p>
+                <div className="mt-2">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="p-1.5 bg-neon-cyan/20 border-2 border-neon-cyan/50">
+                      <Coins className="h-5 w-5 text-neon-cyan" />
+                    </div>
+                    <p className="text-[10px] text-muted-foreground font-mono">
+                      // BALANCE
+                    </p>
+                  </div>
+                  <p className="text-2xl font-bold text-neon-cyan font-mono">
+                    {icpBalance.toFixed(4)}
+                  </p>
+                </div>
+              </div>
+
+              {/* Token Balance */}
+              <div className="p-4 bg-secondary border-2 border-neon-purple/30 relative">
+                <div className="absolute -top-2 left-2 bg-card px-2 text-neon-purple text-[10px] font-mono border border-neon-purple/30">
+                  [ TOK ]
+                </div>
+                <div className="mt-2">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="p-1.5 bg-neon-purple/20 border-2 border-neon-purple/50">
+                      <Trophy className="h-5 w-5 text-neon-purple" />
+                    </div>
+                    <p className="text-[10px] text-muted-foreground font-mono">
+                      // EARNED
+                    </p>
+                  </div>
+                  <p className="text-2xl font-bold text-neon-purple font-mono">
+                    {tokens}
+                  </p>
                 </div>
               </div>
             </div>
 
-            {/* Stats */}
+            {/* Quick Stats */}
             {stats && (
               <div className="grid grid-cols-2 gap-3">
-                <div className="p-3 bg-secondary border-2 border-neon-purple/30">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Trophy className="h-4 w-4 text-neon-purple" />
-                    <p className="text-xs text-muted-foreground font-mono">
-                      Completed
+                <div className="p-3 bg-secondary border-2 border-neon-purple/30 relative">
+                  <div className="absolute -top-2 left-2 bg-card px-2 text-neon-purple text-[10px] font-mono border border-neon-purple/30">
+                    [ COMPLETED ]
+                  </div>
+                  <div className="mt-2">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Trophy className="h-4 w-4 text-neon-purple" />
+                      <p className="text-[10px] text-muted-foreground font-mono">
+                        // GOALS
+                      </p>
+                    </div>
+                    <p className="text-xl font-bold text-neon-purple font-mono">
+                      {stats.completedGoals}
                     </p>
                   </div>
-                  <p className="text-xl font-bold text-neon-purple font-mono">
-                    {stats.completedGoals}
-                  </p>
                 </div>
-                <div className="p-3 bg-secondary border-2 border-neon-green/30">
-                  <div className="flex items-center gap-2 mb-1">
-                    <TrendingUp className="h-4 w-4 text-neon-green" />
-                    <p className="text-xs text-muted-foreground font-mono">
-                      Streak
+                <div className="p-3 bg-secondary border-2 border-neon-green/30 relative">
+                  <div className="absolute -top-2 left-2 bg-card px-2 text-neon-green text-[10px] font-mono border border-neon-green/30">
+                    [ STREAK ]
+                  </div>
+                  <div className="mt-2">
+                    <div className="flex items-center gap-2 mb-1">
+                      <TrendingUp className="h-4 w-4 text-neon-green" />
+                      <p className="text-[10px] text-muted-foreground font-mono">
+                        // CURRENT
+                      </p>
+                    </div>
+                    <p className="text-xl font-bold text-neon-green font-mono">
+                      {stats.currentStreak}
                     </p>
                   </div>
-                  <p className="text-xl font-bold text-neon-green font-mono">
-                    {stats.currentStreak}
-                  </p>
                 </div>
               </div>
             )}
@@ -202,79 +241,35 @@ export function ICPIntegration() {
             {icpGoals.length > 0 && (
               <div className="pt-2">
                 <p className="text-sm font-semibold mb-2 text-neon-cyan font-mono">
-                  &gt; ON_CHAIN_GOALS ({icpGoals.length})
+                  &gt; ON_CHAIN_GOALS // {icpGoals.length} TOTAL
                 </p>
                 <div className="space-y-2 max-h-48 overflow-y-auto">
                   {icpGoals.slice(0, 5).map((goal) => (
                     <div
                       key={goal.id}
-                      className="p-2 bg-secondary rounded border border-primary/20 text-sm font-mono"
+                      className="p-2 bg-secondary border-2 border-neon-cyan/20 text-sm font-mono"
                     >
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between gap-2">
                         <span className="font-medium text-foreground">
                           {goal.title}
                         </span>
-                        <Badge
-                          variant={
+                        <span
+                          className={`text-[10px] px-2 py-0.5 border ${
                             goal.status === "Completed"
-                              ? "default"
-                              : "secondary"
-                          }
-                          className="font-mono text-xs"
+                              ? "border-neon-green text-neon-green bg-neon-green/10"
+                              : goal.status === "Failed"
+                              ? "border-neon-pink text-neon-pink bg-neon-pink/10"
+                              : "border-neon-cyan text-neon-cyan bg-neon-cyan/10"
+                          }`}
                         >
-                          {goal.status}
-                        </Badge>
+                          [{goal.status.toUpperCase()}]
+                        </span>
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
             )}
-
-            {/* Settings Section */}
-            <div className="pt-4 border-t-2 border-neon-cyan/20 space-y-4">
-              <h3 className="text-sm font-semibold text-neon-purple font-mono">
-                &gt; STATS
-              </h3>
-
-              {/* Stats Grid */}
-              {stats && (
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="p-2 bg-secondary border-2 border-primary/20">
-                    <p className="text-xs text-muted-foreground font-mono">
-                      Total
-                    </p>
-                    <p className="text-lg font-bold text-neon-cyan font-mono">
-                      {stats.totalGoals}
-                    </p>
-                  </div>
-                  <div className="p-2 bg-secondary border-2 border-destructive/20">
-                    <p className="text-xs text-muted-foreground font-mono">
-                      Failed
-                    </p>
-                    <p className="text-lg font-bold text-neon-pink font-mono">
-                      {stats.failedGoals}
-                    </p>
-                  </div>
-                  <div className="p-2 bg-secondary border-2 border-neon-green/20">
-                    <p className="text-xs text-muted-foreground font-mono">
-                      Best
-                    </p>
-                    <p className="text-lg font-bold text-neon-green font-mono">
-                      {stats.longestStreak}
-                    </p>
-                  </div>
-                  <div className="p-2 bg-secondary border-2 border-neon-purple/20">
-                    <p className="text-xs text-muted-foreground font-mono">
-                      All
-                    </p>
-                    <p className="text-lg font-bold text-neon-purple font-mono">
-                      {stats.totalTokens}
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
           </div>
         </CardContent>
       </Card>
