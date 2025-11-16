@@ -202,7 +202,6 @@ export default function Goals() {
 
   // Separate own goals in review from others
   const myGoalsInReview = goalsInReview.filter((goal: any) => goal.userId === userPrincipal);
-  const othersGoalsInReview = goalsInReview.filter((goal: any) => goal.userId !== userPrincipal);
 
   // Community section helpers
   const scrollToCommunity = () => {
@@ -519,8 +518,8 @@ export default function Goals() {
         </div>
       </div>
 
-      {/* Goals In Review Section - Only show to users who have submitted goals */}
-      {userHasSubmittedGoals && goalsInReview.length > 0 && (
+      {/* Unified Goals In Review Section - Only show to users who have submitted goals */}
+      {userHasSubmittedGoals && (myGoalsInReview.length > 0 || pendingRequests.length > 0) && (
         <div className="space-y-4 sm:space-y-6 pt-4 sm:pt-6 border-t overflow-x-hidden">
           <div className="min-w-0">
             <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
@@ -532,248 +531,176 @@ export default function Goals() {
             </p>
           </div>
 
-          {reviewLoading ? (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">Loading goals in review...</p>
-            </div>
-          ) : (
-            <>
-              {/* User's own goals in review */}
-              {myGoalsInReview.length > 0 && (
-                <div className="space-y-3">
-                  <h3 className="text-lg font-semibold flex items-center gap-2">
-                    <span className="text-yellow-500">Your Goals Being Reviewed</span>
-                    <span className="text-sm font-normal text-muted-foreground">({myGoalsInReview.length})</span>
-                  </h3>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    {myGoalsInReview.map((goal: any) => (
-                      <Card key={goal.id} className="hover:shadow-lg transition-shadow border-yellow-500 border-2">
-                        <CardHeader>
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-2">
-                                <Eye className="w-5 h-5 text-yellow-500" />
-                                <CardTitle className="text-lg">{goal.title}</CardTitle>
-                              </div>
-                              <CardDescription className="line-clamp-2">
-                                {goal.description}
-                              </CardDescription>
-                            </div>
+          {/* User's own goals in review */}
+          {myGoalsInReview.length > 0 && (
+            <div className="space-y-3">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <span className="text-yellow-500">Your Goals Being Reviewed</span>
+                <span className="text-sm font-normal text-muted-foreground">({myGoalsInReview.length})</span>
+              </h3>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {myGoalsInReview.map((goal: any) => (
+                  <Card key={goal.id} className="hover:shadow-lg transition-shadow border-yellow-500 border-2">
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Eye className="w-5 h-5 text-yellow-500" />
+                            <CardTitle className="text-lg">{goal.title}</CardTitle>
                           </div>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="space-y-3">
-                            {/* Badges */}
-                            <div className="flex flex-wrap gap-2">
-                              <span className={getGoalTypeBadgeClass(goal.goalType)}>
-                                {goal.goalType}
-                              </span>
-                              <span className={getStatusBadgeClass(goal.status)}>
-                                {goal.status}
-                              </span>
-                              <span className={getTokenBadgeClass()}>
-                                {goal.tokensReward} TOK
-                              </span>
-                            </div>
+                          <CardDescription className="line-clamp-2">
+                            {goal.description}
+                          </CardDescription>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {/* Badges */}
+                        <div className="flex flex-wrap gap-2">
+                          <span className={getGoalTypeBadgeClass(goal.goalType)}>
+                            {goal.goalType}
+                          </span>
+                          <span className={getStatusBadgeClass(goal.status)}>
+                            {goal.status}
+                          </span>
+                          <span className={getTokenBadgeClass()}>
+                            {goal.tokensReward} TOK
+                          </span>
+                        </div>
 
-                            {/* Proof */}
-                            {goal.proof && (
-                              <div className="mt-3 pt-3 border-t">
-                                <p className="text-sm font-semibold mb-1">Your Proof:</p>
-                                <p className="text-sm text-muted-foreground italic line-clamp-3">
-                                  {goal.proof}
-                                </p>
-                              </div>
-                            )}
-
-                            <div className="pt-2 text-sm text-yellow-500 font-medium">
-                              Awaiting validator consensus...
-                            </div>
+                        {/* Proof */}
+                        {goal.proof && (
+                          <div className="mt-3 pt-3 border-t">
+                            <p className="text-sm font-semibold mb-1">Your Proof:</p>
+                            <p className="text-sm text-muted-foreground italic line-clamp-3">
+                              {goal.proof}
+                            </p>
                           </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </div>
-              )}
+                        )}
 
-              {/* Other users' goals to review */}
-              {othersGoalsInReview.length > 0 && (
-                <div className="space-y-3">
-                  <h3 className="text-lg font-semibold flex items-center gap-2">
-                    <span>Review Others' Goals</span>
-                    <span className="text-sm font-normal text-muted-foreground">({othersGoalsInReview.length})</span>
-                  </h3>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    {othersGoalsInReview.map((goal: any) => (
-                      <Card key={goal.id} className="hover:shadow-lg transition-shadow border-yellow-500/50">
-                        <CardHeader>
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-2">
-                                <Eye className="w-5 h-5 text-yellow-500" />
-                                <CardTitle className="text-lg">{goal.title}</CardTitle>
-                              </div>
-                              <CardDescription className="line-clamp-2">
-                                {goal.description}
-                              </CardDescription>
-                            </div>
-                          </div>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="space-y-3">
-                            {/* User Info */}
-                            <div className="flex items-center gap-2 text-sm">
-                              <Target className="w-4 h-4 text-muted-foreground" />
-                              <span className="text-muted-foreground font-mono">
-                                {truncatePrincipal(goal.userId)}
-                              </span>
-                            </div>
-
-                            {/* Badges */}
-                            <div className="flex flex-wrap gap-2">
-                              <span className={getGoalTypeBadgeClass(goal.goalType)}>
-                                {goal.goalType}
-                              </span>
-                              <span className={getStatusBadgeClass(goal.status)}>
-                                {goal.status}
-                              </span>
-                              <span className={getTokenBadgeClass()}>
-                                {goal.tokensReward} TOK
-                              </span>
-                            </div>
-
-                            {/* Proof */}
-                            {goal.proof && (
-                              <div className="mt-3 pt-3 border-t">
-                                <p className="text-sm font-semibold mb-1">Proof Submitted:</p>
-                                <p className="text-sm text-muted-foreground italic line-clamp-3">
-                                  {goal.proof}
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      )}
-
-      {/* Voting/Verification Section - Only show to users who have submitted goals */}
-      {userHasSubmittedGoals && (
-        <div className="space-y-4 sm:space-y-6 pt-4 sm:pt-6 border-t overflow-x-hidden">
-          <div className="min-w-0">
-            <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
-              <ThumbsUp className="w-5 h-5 sm:w-6 sm:h-6 text-neon-cyan" />
-              Verify Proofs
-            </h2>
-            <p className="text-muted-foreground text-sm sm:text-base">
-              Help verify goal submissions from other users. You'll earn tokens for participating.
-            </p>
-          </div>
-
-          {verificationsLoading ? (
-            <div className="text-center py-8">
-              <div className="flex items-center justify-center">
-                <Clock className="w-6 h-6 animate-spin mr-2" />
-                <span className="text-muted-foreground">Loading verification requests...</span>
+                        <div className="pt-2 text-sm text-yellow-500 font-medium">
+                          Awaiting validator consensus...
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
             </div>
-          ) : pendingRequests.length === 0 ? (
-            <Card>
-              <CardContent className="py-8">
-                <div className="text-center text-muted-foreground">
-                  <CheckCircle2 className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                  <p className="font-medium">No pending verification requests</p>
-                  <p className="text-sm mt-2">
-                    You'll be randomly selected to verify proofs submitted by other users.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-4">
-              {pendingRequests.map((request: any) => (
-                <Card key={Number(request.id)} className="hover:shadow-lg transition-shadow">
-                  <CardHeader>
-                    <div className="flex items-center justify-between flex-wrap gap-2">
-                      <CardTitle className="text-base sm:text-lg">
-                        Verification Request #{Number(request.id)}
-                      </CardTitle>
-                      <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
-                        <Clock className="w-4 h-4" />
-                        {formatDeadline(request.deadline)}
-                      </div>
-                    </div>
-                    <CardDescription className="text-xs sm:text-sm">
-                      Submitted {formatTimestamp(request.createdAt)}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <h3 className="font-semibold mb-2 text-sm sm:text-base">Proof Submitted:</h3>
-                      <div className="p-3 sm:p-4 bg-muted rounded-lg">
-                        <p className="whitespace-pre-wrap text-sm">{request.proofText}</p>
-                      </div>
-                    </div>
-
-                    {request.proofUrl && request.proofUrl.length > 0 && (
-                      <div>
-                        <h3 className="font-semibold mb-2 text-sm sm:text-base">Proof URL:</h3>
-                        <a
-                          href={request.proofUrl[0]}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-500 hover:underline text-sm break-all"
-                        >
-                          {request.proofUrl[0]}
-                        </a>
-                      </div>
-                    )}
-
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-4 border-t">
-                      <div className="text-xs sm:text-sm text-muted-foreground">
-                        {request.verdicts.length} / {request.validators.length} votes submitted
-                      </div>
-
-                      <div className="flex gap-2">
-                        <Button
-                          onClick={() => handleVote(Number(request.id), false)}
-                          disabled={votingOnId === Number(request.id)}
-                          variant="outline"
-                          size="sm"
-                          className="flex items-center gap-2 flex-1 sm:flex-none"
-                        >
-                          <ThumbsDown className="w-4 h-4" />
-                          Reject
-                        </Button>
-                        <Button
-                          onClick={() => handleVote(Number(request.id), true)}
-                          disabled={votingOnId === Number(request.id)}
-                          size="sm"
-                          className="flex items-center gap-2 flex-1 sm:flex-none"
-                        >
-                          <ThumbsUp className="w-4 h-4" />
-                          Approve
-                        </Button>
-                      </div>
-                    </div>
-
-                    {votingOnId === Number(request.id) && submitVoteMutation.isPending && (
-                      <div className="text-sm text-muted-foreground text-center">
-                        Submitting your vote...
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
           )}
+
+          {/* Community goals to review (verification requests) */}
+          <div className="space-y-3">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <ThumbsUp className="w-5 h-5 text-neon-cyan" />
+              <span>Review Community Goals</span>
+              {pendingRequests.length > 0 && (
+                <span className="text-sm font-normal text-muted-foreground">({pendingRequests.length})</span>
+              )}
+            </h3>
+
+            {verificationsLoading ? (
+              <div className="text-center py-8">
+                <div className="flex items-center justify-center">
+                  <Clock className="w-6 h-6 animate-spin mr-2" />
+                  <span className="text-muted-foreground">Loading verification requests...</span>
+                </div>
+              </div>
+            ) : pendingRequests.length === 0 ? (
+              <Card>
+                <CardContent className="py-8">
+                  <div className="text-center text-muted-foreground">
+                    <CheckCircle2 className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                    <p className="font-medium">No pending verification requests</p>
+                    <p className="text-sm mt-2">
+                      Check back later to help verify proofs submitted by other users.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-4">
+                {pendingRequests.map((request: any) => (
+                  <Card key={Number(request.id)} className="hover:shadow-lg transition-shadow border-neon-cyan/30">
+                    <CardHeader>
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <CardTitle className="text-base sm:text-lg">
+                          Verification Request #{Number(request.id)}
+                        </CardTitle>
+                        <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+                          <Clock className="w-4 h-4" />
+                          {formatDeadline(request.deadline)}
+                        </div>
+                      </div>
+                      <CardDescription className="text-xs sm:text-sm flex items-center gap-2">
+                        <Target className="w-3 h-3" />
+                        <span className="font-mono">{truncatePrincipal(request.userId)}</span>
+                        <span>•</span>
+                        <span>Submitted {formatTimestamp(request.createdAt)}</span>
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <h3 className="font-semibold mb-2 text-sm sm:text-base">Proof Submitted:</h3>
+                        <div className="p-3 sm:p-4 bg-muted rounded-lg">
+                          <p className="whitespace-pre-wrap text-sm">{request.proofText}</p>
+                        </div>
+                      </div>
+
+                      {request.proofUrl && request.proofUrl.length > 0 && (
+                        <div>
+                          <h3 className="font-semibold mb-2 text-sm sm:text-base">Proof URL:</h3>
+                          <a
+                            href={request.proofUrl[0]}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-500 hover:underline text-sm break-all"
+                          >
+                            {request.proofUrl[0]}
+                          </a>
+                        </div>
+                      )}
+
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-4 border-t">
+                        <div className="text-xs sm:text-sm text-muted-foreground">
+                          {request.verdicts.length} votes submitted
+                        </div>
+
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={() => handleVote(Number(request.id), false)}
+                            disabled={votingOnId === Number(request.id)}
+                            variant="outline"
+                            size="sm"
+                            className="flex items-center gap-2 flex-1 sm:flex-none"
+                          >
+                            <ThumbsDown className="w-4 h-4" />
+                            Reject
+                          </Button>
+                          <Button
+                            onClick={() => handleVote(Number(request.id), true)}
+                            disabled={votingOnId === Number(request.id)}
+                            size="sm"
+                            className="flex items-center gap-2 flex-1 sm:flex-none"
+                          >
+                            <ThumbsUp className="w-4 h-4" />
+                            Approve
+                          </Button>
+                        </div>
+                      </div>
+
+                      {votingOnId === Number(request.id) && submitVoteMutation.isPending && (
+                        <div className="text-sm text-muted-foreground text-center">
+                          Submitting your vote...
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
 
