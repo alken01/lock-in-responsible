@@ -1,37 +1,30 @@
 # Lock-In Responsible
 
-**Decentralized goal accountability with AI-powered verification and IP ownership**
+**Decentralized goal accountability with AI-powered verification**
 
-Commit your goals to the blockchain. Get verified by AI. **Own your productivity methodologies as IP.**
+Commit your goals to the blockchain. Get verified by AI and the community.
 
 [![ICP](https://img.shields.io/badge/Built%20on-Internet%20Computer-blue)](https://internetcomputer.org)
-[![Camp Network](https://img.shields.io/badge/IP_Layer-Camp_Network-purple)](https://campnetwork.xyz)
-[![Origin SDK](https://img.shields.io/badge/SDK-Origin-blue)](https://docs.campnetwork.xyz)
 [![License](https://img.shields.io/badge/license-MIT-blue)]()
 
 ---
 
 ## What Is This?
 
-Lock-In Responsible helps you achieve your goals through **cryptographic commitment**, **AI verification**, **IP ownership**, and **economic incentives**.
-
-**🌟 Featured at WAIB Summit AI x Web3 Hackathon - CAMP Network Track**
+Lock-In Responsible helps you achieve your goals through **cryptographic commitment**, **AI verification**, and **economic incentives**.
 
 ### The Problem
 - 88% of people fail their New Year's resolutions
 - To-do apps don't work because there's no consequence for failure
 - You can delete tasks, reset apps, and pretend failures never happened
-- **Nobody owns or earns from their successful productivity methodologies**
 
 ### The Solution
-**Blockchain-immutable goals + AI verification + IP ownership = Real accountability + Creator economy**
+**Blockchain-immutable goals + AI verification = Real accountability**
 
 1. **Create a goal** → Stored on ICP blockchain (can't delete)
 2. **Complete it** → Submit text proof
 3. **Get verified** → AI + community consensus validates your proof
 4. **Earn rewards** → Receive 10 tokens if approved
-5. **Register as IP** → Your successful goal becomes sellable IP on Camp Network via Origin SDK
-6. **Earn royalties** → Others license your methodology, you earn passive income
 
 ---
 
@@ -272,7 +265,6 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed system design.
 | Component | Technology |
 |-----------|------------|
 | **Smart Contract** | Motoko (ICP) |
-| **IP Layer** | **Camp Network Origin SDK** ⭐ |
 | **Frontend** | React 18 + TypeScript + Vite |
 | **UI Framework** | Tailwind CSS + shadcn/ui (Radix UI) |
 | **State Management** | Zustand + TanStack React Query |
@@ -281,16 +273,6 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed system design.
 | **Auth** | Internet Identity (Passwordless) |
 | **Storage** | ICP stable memory |
 | **Deployment** | Vercel (Frontend) + ICP Network (Backend) |
-
-### 🆕 Camp Network Integration
-
-**Origin SDK** enables:
-- **IP Registration**: Goal templates registered as on-chain intellectual property
-- **Creator Royalties**: Earn tokens when others license your methodologies
-- **IP Marketplace**: Browse and purchase proven productivity frameworks
-- **Remix & Derive**: Fork successful goals and create your own variants
-
-This makes Lock-In the **first platform where productivity methodologies are ownable, tradeable IP assets**.
 
 ---
 
@@ -429,13 +411,6 @@ MIT License
 ---
 
 ## 🆕 Recent Updates
-
-### ✅ Camp Network Origin SDK Integration (LATEST)
-- **IP-registered goal templates** - Own your productivity methodologies
-- **Creator royalties** - Earn tokens when others license your goals
-- **IP marketplace** - Buy/sell proven goal frameworks
-- **Origin SDK badges** - Visual indicators for IP-registered content
-- **WAIB Summit Hackathon submission** - CAMP Network Track
 
 ### ✅ AI-Powered Verification
 - Advanced AI analysis of proof submissions

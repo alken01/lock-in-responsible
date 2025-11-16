@@ -125,8 +125,6 @@ class ICPClient {
   async init() {
     this.authClient = await AuthClient.create();
 
-    console.log(`🌐 Initializing agent - Host: ${ICP_HOST}`);
-
     this.agent = await HttpAgent.create({
       host: ICP_HOST,
     });
@@ -139,8 +137,6 @@ class ICPClient {
 
     const identity = this.authClient?.getIdentity();
     if (identity) {
-      console.log('🔄 Recreating agent with authenticated identity');
-
       this.agent = await HttpAgent.create({
         host: ICP_HOST,
         identity,
@@ -148,13 +144,11 @@ class ICPClient {
     }
 
     if (this.agent) {
-      console.log('🎭 Creating actor for canister:', CANISTER_ID);
       this.actor = Actor.createActor(idlFactory, {
         agent: this.agent,
         canisterId: CANISTER_ID,
       });
 
-      console.log('💰 Creating ledger actor');
       this.ledgerActor = Actor.createActor(ledgerIdlFactory, {
         agent: this.agent,
         canisterId: ICP_LEDGER_CANISTER_ID,
@@ -166,15 +160,11 @@ class ICPClient {
     if (!this.authClient) await this.init();
 
     return new Promise<boolean>((resolve, reject) => {
-      console.log('🔐 Starting login with provider:', II_PROVIDER);
-
       this.authClient?.login({
         identityProvider: II_PROVIDER,
         onSuccess: async () => {
-          console.log('✅ Login callback triggered - success!');
           await this.createActor();
-          const isAuth = await this.isAuthenticated();
-          console.log('🔍 Authentication status after login:', isAuth);
+          await this.isAuthenticated();
           resolve(true);
         },
         onError: (error) => {
@@ -193,7 +183,6 @@ class ICPClient {
   async isAuthenticated(): Promise<boolean> {
     if (!this.authClient) await this.init();
     const isAuth = await this.authClient!.isAuthenticated();
-    console.log('🔍 isAuthenticated check:', isAuth);
     return isAuth;
   }
 
@@ -344,9 +333,7 @@ export const icpGoalAPI = {
   },
 
   list: async () => {
-    console.log('📋 Fetching goals from canister...');
     const goals = await icpClient.getMyGoals();
-    console.log('📋 Raw goals from canister:', goals);
     const mapped = goals.map(g => ({
       id: Number(g.id),
       userId: g.userId.toString(),
@@ -359,14 +346,11 @@ export const icpGoalAPI = {
       proof: g.proof.length > 0 ? g.proof[0] : null,
       tokensReward: Number(g.tokensReward),
     }));
-    console.log('📋 Mapped goals:', mapped);
     return mapped;
   },
 
   listAll: async () => {
-    console.log('🌍 Fetching all goals from canister...');
     const goals = await icpClient.getAllGoals();
-    console.log('🌍 Raw all goals from canister:', goals);
     const mapped = goals.map(g => ({
       id: Number(g.id),
       userId: g.userId.toString(),
@@ -379,14 +363,11 @@ export const icpGoalAPI = {
       proof: g.proof.length > 0 ? g.proof[0] : null,
       tokensReward: Number(g.tokensReward),
     }));
-    console.log('🌍 Mapped all goals:', mapped);
     return mapped;
   },
 
   listInReview: async () => {
-    console.log('🔍 Fetching goals in review from canister...');
     const goals = await icpClient.getGoalsInReview();
-    console.log('🔍 Raw goals in review from canister:', goals);
     const mapped = goals.map(g => ({
       id: Number(g.id),
       userId: g.userId.toString(),
@@ -399,12 +380,10 @@ export const icpGoalAPI = {
       proof: g.proof.length > 0 ? g.proof[0] : null,
       tokensReward: Number(g.tokensReward),
     }));
-    console.log('🔍 Mapped goals in review:', mapped);
     return mapped;
   },
 
   listByUser: async (userId: string) => {
-    console.log('👤 Fetching user goals from canister...');
     const principal = Principal.fromText(userId);
     const goals = await icpClient.getUserGoals(principal);
     return goals.map(g => ({
@@ -422,10 +401,8 @@ export const icpGoalAPI = {
   },
 
   submitProof: async (goalId: number, proof: string) => {
-    console.log('🎯 Submitting proof for goal:', goalId, 'proof:', proof);
     try {
       const result = await icpClient.submitProof(goalId, proof);
-      console.log('🎯 Submit proof result:', result);
       return result;
     } catch (error) {
       console.error('❌ Failed to submit proof:', error);

@@ -15,8 +15,6 @@ export default function Community() {
     refetchInterval: 10000, // Refresh every 10 seconds to see new goals
   });
 
-  console.log('🌍 Community Goals Query State:', { allGoals, isLoading, error });
-
   // Group goals by user
   const goalsByUser = allGoals.reduce((acc: any, goal: any) => {
     if (!acc[goal.userId]) {

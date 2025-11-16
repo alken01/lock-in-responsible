@@ -1,41 +1,36 @@
-export interface User {
-  id: string;
-  email: string;
-  name: string;
-  createdAt: string;
-  stats?: {
-    totalGoalsCompleted: number;
-    currentStreak: number;
-    longestStreak: number;
-  };
-  preferences?: {
-    codeLength: number;
-    codeExpiry: number;
-    notifications: {
-      email: boolean;
-      push: boolean;
-    };
-    llmApiKey?: string;
-    llmProvider?: 'openai' | 'anthropic';
-  };
-}
+import { Principal } from '@dfinity/principal';
 
+// Match the canister's GoalType enum
+export type GoalType = 'Custom' | 'Coding' | 'Fitness' | 'Study' | 'Work';
+
+// Match the canister's GoalStatus enum
+export type GoalStatus = 'Pending' | 'InReview' | 'Completed' | 'Failed' | 'Verified';
+
+// Match the canister's Goal type
 export interface Goal {
-  id: string;
+  id: bigint | string; // Support both for compatibility
+  userId: Principal | string;
   title: string;
-  description?: string;
-  type: 'github_commits' | 'github_pr' | 'github_issues' | 'code_lines' | 'time_based' | 'custom';
-  target: number;
-  progress: number;
-  status: 'pending' | 'in_review' | 'completed' | 'failed';
-  dueDate?: string;
-  completedAt?: string;
-  verifications?: Verification[];
-  verificationType: 'manual' | 'github' | 'llm' | 'custom';
-  verificationConfig: any;
-  createdAt: string;
+  description: string;
+  goalType: GoalType;
+  deadline: bigint | number;
+  createdAt: bigint | number;
+  status: GoalStatus;
+  proof?: string;
+  tokensReward: bigint | number;
 }
 
+// Match the canister's UserStats type
+export interface UserStats {
+  totalGoals: bigint | number;
+  completedGoals: bigint | number;
+  failedGoals: bigint | number;
+  currentStreak: bigint | number;
+  longestStreak: bigint | number;
+  totalTokens: bigint | number;
+}
+
+// Verification types for the voting system
 export interface Verification {
   id: string;
   goalId: string;
