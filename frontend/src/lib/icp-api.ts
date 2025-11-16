@@ -56,6 +56,7 @@ const idlFactory = ({ IDL }: any) => {
     ),
     'submitProof': IDL.Func([IDL.Nat, IDL.Text], [IDL.Bool], []),
     'failGoal': IDL.Func([IDL.Nat], [IDL.Bool], []),
+    'rejectGoal': IDL.Func([IDL.Nat], [IDL.Bool], []),
     'getMyGoals': IDL.Func([], [IDL.Vec(Goal)], ['query']),
     'getAllGoals': IDL.Func([], [IDL.Vec(Goal)], ['query']),
     'getGoalsInReview': IDL.Func([], [IDL.Vec(Goal)], ['query']),

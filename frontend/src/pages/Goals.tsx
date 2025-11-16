@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
-import { Plus, Target, CheckCircle2, Circle, XCircle, Users, ArrowDown, History as HistoryIcon, Clock, Eye, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { Plus, Target, CheckCircle2, Circle, XCircle, Users, ArrowDown, History as HistoryIcon, Clock, Eye } from 'lucide-react';
 import { ICPIntegration } from '../components/ICPIntegration';
 import { format } from 'date-fns';
 import { getStatusBadgeClass, getGoalTypeBadgeClass, getTokenBadgeClass } from '../lib/theme-config';
@@ -16,7 +16,6 @@ export default function Goals() {
   const [proofText, setProofText] = useState('');
   const [selectedGoalId, setSelectedGoalId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [votingOnId, setVotingOnId] = useState<number | null>(null);
   const communityRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
   const location = useLocation();
@@ -57,7 +56,7 @@ export default function Goals() {
     },
   });
 
-  const { data: pendingRequests = [], isLoading: verificationsLoading } = useQuery({
+  const { data: pendingRequests = [] } = useQuery({
     queryKey: ['pending-verifications'],
     queryFn: async () => {
       const requests = await icpClient.getPendingRequests();
@@ -111,29 +110,6 @@ export default function Goals() {
     },
   });
 
-  const submitVoteMutation = useMutation({
-    mutationFn: async (data: {
-      requestId: number;
-      verified: boolean;
-      confidence: number;
-      reasoning: string;
-    }) => {
-      return await icpClient.submitVerdict(
-        data.requestId,
-        data.verified,
-        data.confidence,
-        data.reasoning
-      );
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['pending-verifications'] });
-      queryClient.invalidateQueries({ queryKey: ['icp-goals'] });
-      queryClient.invalidateQueries({ queryKey: ['icp-goals-in-review'] });
-      queryClient.invalidateQueries({ queryKey: ['icp-all-goals'] });
-      setVotingOnId(null);
-    },
-  });
-
   const handleCreateGoal = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -160,30 +136,6 @@ export default function Goals() {
     submitProofMutation.mutate({ goalId, proof: proofText });
   };
 
-  const handleVote = (requestId: number, approved: boolean) => {
-    setVotingOnId(requestId);
-    submitVoteMutation.mutate({
-      requestId,
-      verified: approved,
-      confidence: 100,
-      reasoning: approved ? 'Proof looks valid' : 'Proof is not convincing',
-    });
-  };
-
-  const formatTimestamp = (timestamp: bigint) => {
-    const date = new Date(Number(timestamp) / 1000000);
-    return date.toLocaleString();
-  };
-
-  const formatDeadline = (deadline: bigint) => {
-    const deadlineDate = new Date(Number(deadline) / 1000000);
-    const now = new Date();
-    const diff = deadlineDate.getTime() - now.getTime();
-    const minutes = Math.floor(diff / 1000 / 60);
-    if (minutes < 0) return 'Expired';
-    return `${minutes}m remaining`;
-  };
-
   const todayGoals = goals.filter((goal: any) => {
     const goalDate = new Date(goal.deadline);
     return goalDate.toDateString() === new Date().toDateString();
@@ -202,6 +154,7 @@ export default function Goals() {
 
   // Separate own goals in review from others
   const myGoalsInReview = goalsInReview.filter((goal: any) => goal.userId === userPrincipal);
+  const othersGoalsInReview = goalsInReview.filter((goal: any) => goal.userId !== userPrincipal);
 
   // Community section helpers
   const scrollToCommunity = () => {
@@ -590,117 +543,80 @@ export default function Goals() {
             </div>
           )}
 
-          {/* Community goals to review (verification requests) */}
-          <div className="space-y-3">
-            <h3 className="text-lg font-semibold flex items-center gap-2">
-              <ThumbsUp className="w-5 h-5 text-neon-cyan" />
-              <span>Review Community Goals</span>
-              {pendingRequests.length > 0 && (
-                <span className="text-sm font-normal text-muted-foreground">({pendingRequests.length})</span>
-              )}
-            </h3>
+              {/* Other users' goals to review */}
+              {othersGoalsInReview.length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="text-lg font-semibold flex items-center gap-2">
+                    <span>Review Others' Goals</span>
+                    <span className="text-sm font-normal text-muted-foreground">({othersGoalsInReview.length})</span>
+                  </h3>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    {othersGoalsInReview.map((goal: any) => (
+                      <Card key={goal.id} className="hover:shadow-lg transition-shadow border-yellow-500/50">
+                        <CardHeader>
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <Eye className="w-5 h-5 text-yellow-500" />
+                                <CardTitle className="text-lg">{goal.title}</CardTitle>
+                              </div>
+                              <CardDescription className="line-clamp-2">
+                                {goal.description}
+                              </CardDescription>
+                            </div>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-3">
+                            {/* User Info */}
+                            <div className="flex items-center gap-2 text-sm">
+                              <Target className="w-4 h-4 text-muted-foreground" />
+                              <span className="text-muted-foreground font-mono">
+                                {truncatePrincipal(goal.userId)}
+                              </span>
+                            </div>
 
-            {verificationsLoading ? (
-              <div className="text-center py-8">
-                <div className="flex items-center justify-center">
-                  <Clock className="w-6 h-6 animate-spin mr-2" />
-                  <span className="text-muted-foreground">Loading verification requests...</span>
-                </div>
-              </div>
-            ) : pendingRequests.length === 0 ? (
-              <Card>
-                <CardContent className="py-8">
-                  <div className="text-center text-muted-foreground">
-                    <CheckCircle2 className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                    <p className="font-medium">No pending verification requests</p>
-                    <p className="text-sm mt-2">
-                      Check back later to help verify proofs submitted by other users.
-                    </p>
+                            {/* Badges */}
+                            <div className="flex flex-wrap gap-2">
+                              <span className={getGoalTypeBadgeClass(goal.goalType)}>
+                                {goal.goalType}
+                              </span>
+                              <span className={getStatusBadgeClass(goal.status)}>
+                                {goal.status}
+                              </span>
+                              <span className={getTokenBadgeClass()}>
+                                {goal.tokensReward} TOK
+                              </span>
+                            </div>
+
+                            {/* Proof */}
+                            {goal.proof && (
+                              <div className="mt-3 pt-3 border-t">
+                                <p className="text-sm font-semibold mb-1">Proof Submitted:</p>
+                                <p className="text-sm text-muted-foreground italic line-clamp-3">
+                                  {goal.proof}
+                                </p>
+                              </div>
+                            )}
+
+                            {/* Action Button */}
+                            <div className="pt-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="w-full"
+                                onClick={() => navigate('/dashboard/voting')}
+                              >
+                                Review on Voting Page
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
                   </div>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="space-y-4">
-                {pendingRequests.map((request: any) => (
-                  <Card key={Number(request.id)} className="hover:shadow-lg transition-shadow border-neon-cyan/30">
-                    <CardHeader>
-                      <div className="flex items-center justify-between flex-wrap gap-2">
-                        <CardTitle className="text-base sm:text-lg">
-                          Verification Request #{Number(request.id)}
-                        </CardTitle>
-                        <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
-                          <Clock className="w-4 h-4" />
-                          {formatDeadline(request.deadline)}
-                        </div>
-                      </div>
-                      <CardDescription className="text-xs sm:text-sm flex items-center gap-2">
-                        <Target className="w-3 h-3" />
-                        <span className="font-mono">{truncatePrincipal(request.userId)}</span>
-                        <span>•</span>
-                        <span>Submitted {formatTimestamp(request.createdAt)}</span>
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div>
-                        <h3 className="font-semibold mb-2 text-sm sm:text-base">Proof Submitted:</h3>
-                        <div className="p-3 sm:p-4 bg-muted rounded-lg">
-                          <p className="whitespace-pre-wrap text-sm">{request.proofText}</p>
-                        </div>
-                      </div>
-
-                      {request.proofUrl && request.proofUrl.length > 0 && (
-                        <div>
-                          <h3 className="font-semibold mb-2 text-sm sm:text-base">Proof URL:</h3>
-                          <a
-                            href={request.proofUrl[0]}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-500 hover:underline text-sm break-all"
-                          >
-                            {request.proofUrl[0]}
-                          </a>
-                        </div>
-                      )}
-
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-4 border-t">
-                        <div className="text-xs sm:text-sm text-muted-foreground">
-                          {request.verdicts.length} votes submitted
-                        </div>
-
-                        <div className="flex gap-2">
-                          <Button
-                            onClick={() => handleVote(Number(request.id), false)}
-                            disabled={votingOnId === Number(request.id)}
-                            variant="outline"
-                            size="sm"
-                            className="flex items-center gap-2 flex-1 sm:flex-none"
-                          >
-                            <ThumbsDown className="w-4 h-4" />
-                            Reject
-                          </Button>
-                          <Button
-                            onClick={() => handleVote(Number(request.id), true)}
-                            disabled={votingOnId === Number(request.id)}
-                            size="sm"
-                            className="flex items-center gap-2 flex-1 sm:flex-none"
-                          >
-                            <ThumbsUp className="w-4 h-4" />
-                            Approve
-                          </Button>
-                        </div>
-                      </div>
-
-                      {votingOnId === Number(request.id) && submitVoteMutation.isPending && (
-                        <div className="text-sm text-muted-foreground text-center">
-                          Submitting your vote...
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </div>
+                </div>
+              )}
         </div>
       )}
 

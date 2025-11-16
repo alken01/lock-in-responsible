@@ -388,6 +388,42 @@ persistent actor LockInResponsible {
     }
   };
 
+  // Reject goal (for reviewers - no ownership check)
+  public shared func rejectGoal(goalId: GoalId) : async Bool {
+    switch (goals.get(goalId)) {
+      case (?goal) {
+        let updatedGoal = {
+          id = goal.id;
+          userId = goal.userId;
+          title = goal.title;
+          description = goal.description;
+          goalType = goal.goalType;
+          deadline = goal.deadline;
+          createdAt = goal.createdAt;
+          status = #Failed;
+          proof = goal.proof;
+          tokensReward = goal.tokensReward;
+        };
+        goals.put(goalId, updatedGoal);
+
+        // Update owner's stats
+        let stats = getOrCreateUserStats(goal.userId);
+        let updatedStats = {
+          totalGoals = stats.totalGoals;
+          completedGoals = stats.completedGoals;
+          failedGoals = stats.failedGoals + 1;
+          currentStreak = 0;
+          longestStreak = stats.longestStreak;
+          totalTokens = stats.totalTokens;
+        };
+        userStats.put(goal.userId, updatedStats);
+
+        true
+      };
+      case null { false };
+    }
+  };
+
   // Health check
   public query func healthCheck() : async Bool {
     true
