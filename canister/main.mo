@@ -670,7 +670,7 @@ persistent actor LockInResponsible {
           };
         };
 
-        // Mark goal as verified if majority approved
+        // Mark goal as verified if majority approved, or failed if rejected
         if (majority) {
           // Update goal status to completed
           switch (goals.get(request.goalId)) {
@@ -703,6 +703,38 @@ persistent actor LockInResponsible {
                 currentStreak = newStreak;
                 longestStreak = if (newStreak > stats.longestStreak) { newStreak } else { stats.longestStreak };
                 totalTokens = currentTokens + goal.tokensReward;
+              };
+              userStats.put(goal.userId, updatedStats);
+            };
+            case null {};
+          };
+        } else {
+          // Majority rejected - mark goal as failed
+          switch (goals.get(request.goalId)) {
+            case (?goal) {
+              let updatedGoal = {
+                id = goal.id;
+                userId = goal.userId;
+                title = goal.title;
+                description = goal.description;
+                goalType = goal.goalType;
+                deadline = goal.deadline;
+                createdAt = goal.createdAt;
+                status = #Failed;
+                proof = ?request.proofText;
+                tokensReward = goal.tokensReward;
+              };
+              goals.put(request.goalId, updatedGoal);
+
+              // Reset streak
+              let stats = getOrCreateUserStats(goal.userId);
+              let updatedStats = {
+                totalGoals = stats.totalGoals;
+                completedGoals = stats.completedGoals;
+                failedGoals = stats.failedGoals + 1;
+                currentStreak = 0;
+                longestStreak = stats.longestStreak;
+                totalTokens = stats.totalTokens;
               };
               userStats.put(goal.userId, updatedStats);
             };

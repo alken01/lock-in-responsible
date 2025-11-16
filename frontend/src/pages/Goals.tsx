@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { icpGoalAPI } from '../lib/icp-api';
+import { icpGoalAPI, icpClient } from '../lib/icp-api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -48,9 +48,18 @@ export default function Goals() {
     refetchInterval: 5000, // Refresh every 5 seconds
   });
 
+  const { data: userPrincipal } = useQuery({
+    queryKey: ['user-principal'],
+    queryFn: async () => {
+      const principal = await icpClient.getPrincipal();
+      return principal?.toString() || null;
+    },
+  });
+
   console.log('🎯 Goals Query State:', { goals, isLoading, error });
   console.log('🌍 Community Goals Query State:', { allGoals, communityLoading });
   console.log('🔍 Goals In Review State:', { goalsInReview, reviewLoading });
+  console.log('👤 User Principal:', userPrincipal);
 
   const createGoalMutation = useMutation({
     mutationFn: async (data: {
@@ -78,6 +87,8 @@ export default function Goals() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['icp-goals'] });
+      queryClient.invalidateQueries({ queryKey: ['icp-goals-in-review'] });
+      queryClient.invalidateQueries({ queryKey: ['icp-all-goals'] });
       setProofText('');
       setSelectedGoalId(null);
     },
@@ -125,8 +136,16 @@ export default function Goals() {
     g.status === 'Completed' || g.status === 'Verified'
   );
 
+  const todayGoalsInReview = todayGoals.filter((g: any) =>
+    g.status === 'InReview'
+  );
+
   // Check if user has submitted any goals
   const userHasSubmittedGoals = goals.length > 0;
+
+  // Separate own goals in review from others
+  const myGoalsInReview = goalsInReview.filter((goal: any) => goal.userId === userPrincipal);
+  const othersGoalsInReview = goalsInReview.filter((goal: any) => goal.userId !== userPrincipal);
 
   // Community section helpers
   const scrollToCommunity = () => {
@@ -175,6 +194,7 @@ export default function Goals() {
     g.status === 'Completed' || g.status === 'Verified'
   ).length;
   const pendingGoals = allGoals.filter((g: any) => g.status === 'Pending').length;
+  const inReviewGoals = allGoals.filter((g: any) => g.status === 'InReview').length;
 
   // History section helpers
   const sortedHistoryGoals = [...goals].sort((a: any, b: any) =>
@@ -209,6 +229,9 @@ export default function Goals() {
               <h1 className="text-2xl sm:text-3xl font-bold truncate">Today's Goals</h1>
               <p className="text-muted-foreground text-sm sm:text-base">
                 {completedGoals.length} of {todayGoals.length} goals completed
+                {todayGoalsInReview.length > 0 && (
+                  <span className="text-yellow-500"> • {todayGoalsInReview.length} in review</span>
+                )}
               </p>
             </div>
             <div className="flex gap-2 flex-shrink-0">
@@ -457,71 +480,141 @@ export default function Goals() {
               <p className="text-muted-foreground">Loading goals in review...</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {goalsInReview.map((goal: any) => (
-                <Card key={goal.id} className="hover:shadow-lg transition-shadow border-yellow-500/50">
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Eye className="w-5 h-5 text-yellow-500" />
-                          <CardTitle className="text-lg">{goal.title}</CardTitle>
-                        </div>
-                        <CardDescription className="line-clamp-2">
-                          {goal.description}
-                        </CardDescription>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      {/* User Info */}
-                      <div className="flex items-center gap-2 text-sm">
-                        <Target className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-muted-foreground font-mono">
-                          {truncatePrincipal(goal.userId)}
-                        </span>
-                      </div>
+            <>
+              {/* User's own goals in review */}
+              {myGoalsInReview.length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="text-lg font-semibold flex items-center gap-2">
+                    <span className="text-yellow-500">Your Goals Being Reviewed</span>
+                    <span className="text-sm font-normal text-muted-foreground">({myGoalsInReview.length})</span>
+                  </h3>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    {myGoalsInReview.map((goal: any) => (
+                      <Card key={goal.id} className="hover:shadow-lg transition-shadow border-yellow-500 border-2">
+                        <CardHeader>
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <Eye className="w-5 h-5 text-yellow-500" />
+                                <CardTitle className="text-lg">{goal.title}</CardTitle>
+                              </div>
+                              <CardDescription className="line-clamp-2">
+                                {goal.description}
+                              </CardDescription>
+                            </div>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-3">
+                            {/* Badges */}
+                            <div className="flex flex-wrap gap-2">
+                              <span className={getGoalTypeBadgeClass(goal.goalType)}>
+                                {goal.goalType}
+                              </span>
+                              <span className={getStatusBadgeClass(goal.status)}>
+                                {goal.status}
+                              </span>
+                              <span className={getTokenBadgeClass()}>
+                                {goal.tokensReward} TOK
+                              </span>
+                            </div>
 
-                      {/* Badges */}
-                      <div className="flex flex-wrap gap-2">
-                        <span className={getGoalTypeBadgeClass(goal.goalType)}>
-                          {goal.goalType}
-                        </span>
-                        <span className={getStatusBadgeClass(goal.status)}>
-                          {goal.status}
-                        </span>
-                        <span className={getTokenBadgeClass()}>
-                          {goal.tokensReward} TOK
-                        </span>
-                      </div>
+                            {/* Proof */}
+                            {goal.proof && (
+                              <div className="mt-3 pt-3 border-t">
+                                <p className="text-sm font-semibold mb-1">Your Proof:</p>
+                                <p className="text-sm text-muted-foreground italic line-clamp-3">
+                                  {goal.proof}
+                                </p>
+                              </div>
+                            )}
 
-                      {/* Proof */}
-                      {goal.proof && (
-                        <div className="mt-3 pt-3 border-t">
-                          <p className="text-sm font-semibold mb-1">Proof Submitted:</p>
-                          <p className="text-sm text-muted-foreground italic line-clamp-3">
-                            {goal.proof}
-                          </p>
-                        </div>
-                      )}
+                            <div className="pt-2 text-sm text-yellow-500 font-medium">
+                              Awaiting validator consensus...
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-                      {/* Action Button */}
-                      <div className="pt-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="w-full"
-                          onClick={() => navigate('/dashboard/voting')}
-                        >
-                          Review on Voting Page
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+              {/* Other users' goals to review */}
+              {othersGoalsInReview.length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="text-lg font-semibold flex items-center gap-2">
+                    <span>Review Others' Goals</span>
+                    <span className="text-sm font-normal text-muted-foreground">({othersGoalsInReview.length})</span>
+                  </h3>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    {othersGoalsInReview.map((goal: any) => (
+                      <Card key={goal.id} className="hover:shadow-lg transition-shadow border-yellow-500/50">
+                        <CardHeader>
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <Eye className="w-5 h-5 text-yellow-500" />
+                                <CardTitle className="text-lg">{goal.title}</CardTitle>
+                              </div>
+                              <CardDescription className="line-clamp-2">
+                                {goal.description}
+                              </CardDescription>
+                            </div>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-3">
+                            {/* User Info */}
+                            <div className="flex items-center gap-2 text-sm">
+                              <Target className="w-4 h-4 text-muted-foreground" />
+                              <span className="text-muted-foreground font-mono">
+                                {truncatePrincipal(goal.userId)}
+                              </span>
+                            </div>
+
+                            {/* Badges */}
+                            <div className="flex flex-wrap gap-2">
+                              <span className={getGoalTypeBadgeClass(goal.goalType)}>
+                                {goal.goalType}
+                              </span>
+                              <span className={getStatusBadgeClass(goal.status)}>
+                                {goal.status}
+                              </span>
+                              <span className={getTokenBadgeClass()}>
+                                {goal.tokensReward} TOK
+                              </span>
+                            </div>
+
+                            {/* Proof */}
+                            {goal.proof && (
+                              <div className="mt-3 pt-3 border-t">
+                                <p className="text-sm font-semibold mb-1">Proof Submitted:</p>
+                                <p className="text-sm text-muted-foreground italic line-clamp-3">
+                                  {goal.proof}
+                                </p>
+                              </div>
+                            )}
+
+                            {/* Action Button */}
+                            <div className="pt-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="w-full"
+                                onClick={() => navigate('/dashboard/voting')}
+                              >
+                                Review on Voting Page
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       )}
@@ -633,7 +726,7 @@ export default function Goals() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4">
           <Card>
             <CardHeader className="pb-2 sm:pb-3">
               <CardDescription className="text-xs sm:text-sm">Total Goals</CardDescription>
@@ -654,7 +747,13 @@ export default function Goals() {
           </Card>
           <Card>
             <CardHeader className="pb-2 sm:pb-3">
-              <CardDescription className="text-xs sm:text-sm">In Progress</CardDescription>
+              <CardDescription className="text-xs sm:text-sm">In Review</CardDescription>
+              <CardTitle className="text-2xl sm:text-3xl text-yellow-600">{inReviewGoals}</CardTitle>
+            </CardHeader>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2 sm:pb-3">
+              <CardDescription className="text-xs sm:text-sm">Pending</CardDescription>
               <CardTitle className="text-2xl sm:text-3xl text-blue-600">{pendingGoals}</CardTitle>
             </CardHeader>
           </Card>
