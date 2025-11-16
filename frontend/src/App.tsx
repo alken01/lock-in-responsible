@@ -4,6 +4,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
 import Goals from "./pages/Goals";
 import Login from "./pages/Login";
+import Marketplace from "./pages/Marketplace";
 import { useAuthStore } from "./store/authStore";
 
 const queryClient = new QueryClient({
@@ -57,6 +58,7 @@ function App() {
             }
           >
             <Route index element={<Goals />} />
+            <Route path="marketplace" element={<Marketplace />} />
           </Route>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
