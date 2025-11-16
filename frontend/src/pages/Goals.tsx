@@ -34,7 +34,7 @@ export default function Goals() {
     }
   }, [location.pathname]);
 
-  const { data: goals = [], isLoading, error } = useQuery({
+  const { data: goals = [], isLoading } = useQuery({
     queryKey: ['icp-goals'],
     queryFn: icpGoalAPI.list,
   });
@@ -45,7 +45,7 @@ export default function Goals() {
     refetchInterval: 10000, // Refresh every 10 seconds
   });
 
-  const { data: goalsInReview = [], isLoading: reviewLoading } = useQuery({
+  const { data: goalsInReview = [] } = useQuery({
     queryKey: ['icp-goals-in-review'],
     queryFn: icpGoalAPI.listInReview,
     refetchInterval: 5000, // Refresh every 5 seconds
@@ -67,11 +67,6 @@ export default function Goals() {
     },
     refetchInterval: 5000, // Poll every 5 seconds
   });
-
-  console.log('🎯 Goals Query State:', { goals, isLoading, error });
-  console.log('🌍 Community Goals Query State:', { allGoals, communityLoading });
-  console.log('🔍 Goals In Review State:', { goalsInReview, reviewLoading });
-  console.log('👤 User Principal:', userPrincipal);
 
   const createGoalMutation = useMutation({
     mutationFn: async (data: {
@@ -274,10 +269,10 @@ export default function Goals() {
             <Shield className="w-6 h-6 text-blue-600 flex-shrink-0" />
             <div className="min-w-0">
               <p className="font-semibold text-blue-900 dark:text-blue-100 text-sm sm:text-base">
-                IP-Registered Goals via Origin SDK
+                Community-Verified Goals
               </p>
               <p className="text-xs sm:text-sm text-blue-700 dark:text-blue-300">
-                Your successful goals become sellable IP on Camp Network
+                Your successful goals contribute to the community knowledge base
               </p>
             </div>
           </div>

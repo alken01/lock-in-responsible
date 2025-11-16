@@ -92,8 +92,9 @@ Respond ONLY in this JSON format:
   }
 
   async verifyWithAnthropic(prompt) {
-    // TODO: Implement Anthropic API
-    throw new Error('Anthropic not yet implemented');
+    // ⚠️ NOT IMPLEMENTED: Anthropic Claude API integration
+    // Would require @anthropic-ai/sdk package and API key
+    throw new Error('Anthropic not yet implemented - use OpenAI or Ollama instead');
   }
 
   parseResponse(response) {

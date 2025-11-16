@@ -1,7 +1,7 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { Button } from '../components/ui/button';
-import { Lock, LogOut, ShoppingCart, Target } from 'lucide-react';
+import { Lock, LogOut, ShoppingCart, Target, Users, Vote, History as HistoryIcon, Settings as SettingsIcon } from 'lucide-react';
 
 export default function Dashboard() {
   const { logout } = useAuthStore();
@@ -48,6 +48,42 @@ export default function Dashboard() {
             >
               <ShoppingCart className="h-4 w-4 mr-2" />
               Marketplace
+            </Button>
+            <Button
+              variant={location.pathname === '/dashboard/community' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => navigate('/dashboard/community')}
+              className="hidden md:flex"
+            >
+              <Users className="h-4 w-4 mr-2" />
+              Community
+            </Button>
+            <Button
+              variant={location.pathname === '/dashboard/voting' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => navigate('/dashboard/voting')}
+              className="hidden md:flex"
+            >
+              <Vote className="h-4 w-4 mr-2" />
+              Voting
+            </Button>
+            <Button
+              variant={location.pathname === '/dashboard/history' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => navigate('/dashboard/history')}
+              className="hidden lg:flex"
+            >
+              <HistoryIcon className="h-4 w-4 mr-2" />
+              History
+            </Button>
+            <Button
+              variant={location.pathname === '/dashboard/settings' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => navigate('/dashboard/settings')}
+              className="hidden lg:flex"
+            >
+              <SettingsIcon className="h-4 w-4 mr-2" />
+              Settings
             </Button>
             <Button
               variant="ghost"

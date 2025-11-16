@@ -173,11 +173,11 @@ export default function Marketplace() {
             <Shield className="w-7 h-7 text-blue-600 flex-shrink-0" />
             <div className="flex-1">
               <p className="font-bold text-blue-900 dark:text-blue-100 flex items-center gap-2">
-                Powered by Camp Network Origin SDK
-                <Badge className="bg-blue-600 text-white">IP-Registered</Badge>
+                Community Goal Templates
+                <Badge className="bg-blue-600 text-white">Verified</Badge>
               </p>
               <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
-                All goal templates are registered as intellectual property on-chain. Creators earn royalties when you purchase their methodologies.
+                Browse proven goal templates created and verified by the community.
               </p>
             </div>
           </div>
