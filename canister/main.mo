@@ -494,9 +494,14 @@ persistent actor LockInResponsible {
 
     switch (verificationRequests.get(requestId)) {
       case (?request) {
-        // Verify caller is a selected validator
-        let isValidator = Array.find<ValidatorId>(request.validators, func(v) { v == caller });
-        if (isValidator == null) {
+        // Verify caller is NOT the goal owner (anyone can vote except the owner)
+        if (request.userId == caller) {
+          return false;
+        };
+
+        // Check if caller hasn't already voted
+        let hasVoted = Array.find<Verdict>(request.verdicts, func(verdict) { verdict.validator == caller });
+        if (hasVoted != null) {
           return false;
         };
 
@@ -525,8 +530,8 @@ persistent actor LockInResponsible {
 
         verificationRequests.put(requestId, updatedRequest);
 
-        let totalValidators = updatedRequest.validators.size();
-        let enoughVotes = totalValidators >= 2 ; // obv update this
+        // Trigger consensus after minimum 2 votes
+        let enoughVotes = updatedRequest.verdicts.size() >= 2;
 
         if (enoughVotes) {
           ignore calculateConsensus(requestId);
@@ -545,8 +550,8 @@ persistent actor LockInResponsible {
     let buffer = Buffer.Buffer<VerificationRequest>(0);
     for ((_, request) in verificationRequests.entries()) {
       if (request.status == #Pending) {
-        // Check if caller is a selected validator for this request
-        if (Array.find<ValidatorId>(request.validators, func(v) { v == caller }) != null) {
+        // Show all requests except those created by the caller
+        if (request.userId != caller) {
           // Check if caller hasn't voted yet
           let hasVoted = Array.find<Verdict>(request.verdicts, func(verdict) { verdict.validator == caller });
           if (hasVoted == null) {
@@ -570,14 +575,10 @@ persistent actor LockInResponsible {
           };
         };
 
-        // Calculate required votes based on validator count
-        let totalValidators = request.validators.size();
-        let requiredVotes = if (totalValidators >= 5) {
-          3 // At least 3/5 if we have 5 validators
-        } else {
-          // More than (n-1)/2 for fewer validators
-          (totalValidators + 1) / 2 // This gives us ceiling of n/2
-        };
+        // Calculate required votes based on actual votes received
+        let totalVotes = request.verdicts.size();
+        // Need majority of actual votes to approve (more than half)
+        let requiredVotes = (totalVotes / 2) + 1;
 
         let majority = verifiedCount >= requiredVotes;
 
