@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
-import { Plus, Target, CheckCircle2, Circle, XCircle, Users, ArrowDown, History as HistoryIcon, Clock, Eye } from 'lucide-react';
+import { Plus, Target, CheckCircle2, Circle, XCircle, Users, ArrowDown, History as HistoryIcon, Clock, Eye, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { ICPIntegration } from '../components/ICPIntegration';
 import { format } from 'date-fns';
 import { getStatusBadgeClass, getGoalTypeBadgeClass, getTokenBadgeClass } from '../lib/theme-config';
@@ -16,6 +16,7 @@ export default function Goals() {
   const [proofText, setProofText] = useState('');
   const [selectedGoalId, setSelectedGoalId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [votingOnId, setVotingOnId] = useState<number | null>(null);
   const communityRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
   const location = useLocation();
@@ -54,6 +55,15 @@ export default function Goals() {
       const principal = await icpClient.getPrincipal();
       return principal?.toString() || null;
     },
+  });
+
+  const { data: pendingRequests = [], isLoading: verificationsLoading } = useQuery({
+    queryKey: ['pending-verifications'],
+    queryFn: async () => {
+      const requests = await icpClient.getPendingRequests();
+      return requests as any[];
+    },
+    refetchInterval: 5000, // Poll every 5 seconds
   });
 
   console.log('🎯 Goals Query State:', { goals, isLoading, error });
@@ -101,6 +111,29 @@ export default function Goals() {
     },
   });
 
+  const submitVoteMutation = useMutation({
+    mutationFn: async (data: {
+      requestId: number;
+      verified: boolean;
+      confidence: number;
+      reasoning: string;
+    }) => {
+      return await icpClient.submitVerdict(
+        data.requestId,
+        data.verified,
+        data.confidence,
+        data.reasoning
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pending-verifications'] });
+      queryClient.invalidateQueries({ queryKey: ['icp-goals'] });
+      queryClient.invalidateQueries({ queryKey: ['icp-goals-in-review'] });
+      queryClient.invalidateQueries({ queryKey: ['icp-all-goals'] });
+      setVotingOnId(null);
+    },
+  });
+
   const handleCreateGoal = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -125,6 +158,30 @@ export default function Goals() {
   const handleSubmitProof = (goalId: number) => {
     if (!proofText.trim()) return;
     submitProofMutation.mutate({ goalId, proof: proofText });
+  };
+
+  const handleVote = (requestId: number, approved: boolean) => {
+    setVotingOnId(requestId);
+    submitVoteMutation.mutate({
+      requestId,
+      verified: approved,
+      confidence: 100,
+      reasoning: approved ? 'Proof looks valid' : 'Proof is not convincing',
+    });
+  };
+
+  const formatTimestamp = (timestamp: bigint) => {
+    const date = new Date(Number(timestamp) / 1000000);
+    return date.toLocaleString();
+  };
+
+  const formatDeadline = (deadline: bigint) => {
+    const deadlineDate = new Date(Number(deadline) / 1000000);
+    const now = new Date();
+    const diff = deadlineDate.getTime() - now.getTime();
+    const minutes = Math.floor(diff / 1000 / 60);
+    if (minutes < 0) return 'Expired';
+    return `${minutes}m remaining`;
   };
 
   const todayGoals = goals.filter((goal: any) => {
@@ -595,18 +652,6 @@ export default function Goals() {
                                 </p>
                               </div>
                             )}
-
-                            {/* Action Button */}
-                            <div className="pt-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="w-full"
-                                onClick={() => navigate('/dashboard/voting')}
-                              >
-                                Review on Voting Page
-                              </Button>
-                            </div>
                           </div>
                         </CardContent>
                       </Card>
@@ -615,6 +660,119 @@ export default function Goals() {
                 </div>
               )}
             </>
+          )}
+        </div>
+      )}
+
+      {/* Voting/Verification Section - Only show to users who have submitted goals */}
+      {userHasSubmittedGoals && (
+        <div className="space-y-4 sm:space-y-6 pt-4 sm:pt-6 border-t overflow-x-hidden">
+          <div className="min-w-0">
+            <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
+              <ThumbsUp className="w-5 h-5 sm:w-6 sm:h-6 text-neon-cyan" />
+              Verify Proofs
+            </h2>
+            <p className="text-muted-foreground text-sm sm:text-base">
+              Help verify goal submissions from other users. You'll earn tokens for participating.
+            </p>
+          </div>
+
+          {verificationsLoading ? (
+            <div className="text-center py-8">
+              <div className="flex items-center justify-center">
+                <Clock className="w-6 h-6 animate-spin mr-2" />
+                <span className="text-muted-foreground">Loading verification requests...</span>
+              </div>
+            </div>
+          ) : pendingRequests.length === 0 ? (
+            <Card>
+              <CardContent className="py-8">
+                <div className="text-center text-muted-foreground">
+                  <CheckCircle2 className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                  <p className="font-medium">No pending verification requests</p>
+                  <p className="text-sm mt-2">
+                    You'll be randomly selected to verify proofs submitted by other users.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {pendingRequests.map((request: any) => (
+                <Card key={Number(request.id)} className="hover:shadow-lg transition-shadow">
+                  <CardHeader>
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      <CardTitle className="text-base sm:text-lg">
+                        Verification Request #{Number(request.id)}
+                      </CardTitle>
+                      <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+                        <Clock className="w-4 h-4" />
+                        {formatDeadline(request.deadline)}
+                      </div>
+                    </div>
+                    <CardDescription className="text-xs sm:text-sm">
+                      Submitted {formatTimestamp(request.createdAt)}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <h3 className="font-semibold mb-2 text-sm sm:text-base">Proof Submitted:</h3>
+                      <div className="p-3 sm:p-4 bg-muted rounded-lg">
+                        <p className="whitespace-pre-wrap text-sm">{request.proofText}</p>
+                      </div>
+                    </div>
+
+                    {request.proofUrl && request.proofUrl.length > 0 && (
+                      <div>
+                        <h3 className="font-semibold mb-2 text-sm sm:text-base">Proof URL:</h3>
+                        <a
+                          href={request.proofUrl[0]}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-500 hover:underline text-sm break-all"
+                        >
+                          {request.proofUrl[0]}
+                        </a>
+                      </div>
+                    )}
+
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-4 border-t">
+                      <div className="text-xs sm:text-sm text-muted-foreground">
+                        {request.verdicts.length} / {request.validators.length} votes submitted
+                      </div>
+
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => handleVote(Number(request.id), false)}
+                          disabled={votingOnId === Number(request.id)}
+                          variant="outline"
+                          size="sm"
+                          className="flex items-center gap-2 flex-1 sm:flex-none"
+                        >
+                          <ThumbsDown className="w-4 h-4" />
+                          Reject
+                        </Button>
+                        <Button
+                          onClick={() => handleVote(Number(request.id), true)}
+                          disabled={votingOnId === Number(request.id)}
+                          size="sm"
+                          className="flex items-center gap-2 flex-1 sm:flex-none"
+                        >
+                          <ThumbsUp className="w-4 h-4" />
+                          Approve
+                        </Button>
+                      </div>
+                    </div>
+
+                    {votingOnId === Number(request.id) && submitVoteMutation.isPending && (
+                      <div className="text-sm text-muted-foreground text-center">
+                        Submitting your vote...
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           )}
         </div>
       )}
