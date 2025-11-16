@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
-import { Plus, Target, CheckCircle2, Circle, XCircle, Users, ArrowDown, History as HistoryIcon, Clock, Eye } from 'lucide-react';
+import { Plus, Target, CheckCircle2, Circle, XCircle, Users, ArrowDown, History as HistoryIcon, Clock, Eye, Sparkles } from 'lucide-react';
 import { ICPIntegration } from '../components/ICPIntegration';
 import { format } from 'date-fns';
 import { getStatusBadgeClass, getGoalTypeBadgeClass, getTokenBadgeClass } from '../lib/theme-config';
@@ -228,6 +228,21 @@ export default function Goals() {
 
   return (
     <div className="space-y-8 sm:space-y-12 overflow-x-hidden">
+      {/* AI-Powered Platform Badge */}
+      <div className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-950 dark:to-blue-950 border-2 border-purple-200 dark:border-purple-800 rounded-lg p-4">
+        <div className="flex items-center gap-3">
+          <Sparkles className="w-6 h-6 text-purple-600 flex-shrink-0" />
+          <div className="min-w-0">
+            <p className="font-semibold text-purple-900 dark:text-purple-100 text-sm sm:text-base">
+              AI-Powered Verification System
+            </p>
+            <p className="text-xs sm:text-sm text-purple-700 dark:text-purple-300">
+              Your proofs are analyzed by advanced AI validators and community voting for maximum accountability
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Today's Goals Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Main Content */}

@@ -1,11 +1,12 @@
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { Button } from '../components/ui/button';
-import { Lock, LogOut } from 'lucide-react';
+import { Lock, LogOut, ShoppingCart, Target } from 'lucide-react';
 
 export default function Dashboard() {
   const { logout } = useAuthStore();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogout = async () => {
     await logout();
@@ -30,6 +31,24 @@ export default function Dashboard() {
           </div>
 
           <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
+            <Button
+              variant={location.pathname === '/dashboard' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => navigate('/dashboard')}
+              className="hidden sm:flex"
+            >
+              <Target className="h-4 w-4 mr-2" />
+              Goals
+            </Button>
+            <Button
+              variant={location.pathname === '/dashboard/marketplace' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => navigate('/dashboard/marketplace')}
+              className="hidden sm:flex"
+            >
+              <ShoppingCart className="h-4 w-4 mr-2" />
+              Marketplace
+            </Button>
             <Button
               variant="ghost"
               size="icon"
