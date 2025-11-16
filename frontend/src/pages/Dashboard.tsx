@@ -9,7 +9,8 @@ import {
   Lock,
   LogOut,
   Menu,
-  X
+  X,
+  Users
 } from 'lucide-react';
 
 export default function Dashboard() {
@@ -25,6 +26,7 @@ export default function Dashboard() {
 
   const navItems = [
     { path: '/dashboard', icon: Target, label: 'Goals' },
+    { path: '/dashboard/community', icon: Users, label: 'Community' },
     { path: '/dashboard/history', icon: History, label: 'History' },
     { path: '/dashboard/settings', icon: Settings, label: 'Settings' },
   ];

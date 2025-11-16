@@ -321,6 +321,32 @@ persistent actor LockInResponsible {
     }
   };
 
+  // Get all public goals from all users
+  public query func getAllGoals() : async [Goal] {
+    let buffer = Buffer.Buffer<Goal>(goals.size());
+    for ((_, goal) in goals.entries()) {
+      buffer.add(goal);
+    };
+    Buffer.toArray(buffer)
+  };
+
+  // Get goals for a specific user
+  public query func getUserGoals(userId: UserId) : async [Goal] {
+    switch (userGoals.get(userId)) {
+      case (?goalIds) {
+        let buffer = Buffer.Buffer<Goal>(goalIds.size());
+        for (goalId in goalIds.vals()) {
+          switch (goals.get(goalId)) {
+            case (?goal) { buffer.add(goal) };
+            case null {};
+          };
+        };
+        Buffer.toArray(buffer)
+      };
+      case null { [] };
+    }
+  };
+
   // Get specific goal
   public query func getGoal(goalId: GoalId) : async ?Goal {
     goals.get(goalId)
