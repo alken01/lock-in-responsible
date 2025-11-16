@@ -1,6 +1,8 @@
 import Array "mo:base/Array";
-import HashMap "mo:base/HashMap";
+import Buffer "mo:base/Buffer";
 import Hash "mo:base/Hash";
+import HashMap "mo:base/HashMap";
+import Int "mo:base/Int";
 import Iter "mo:base/Iter";
 import Nat "mo:base/Nat";
 import Nat32 "mo:base/Nat32";
@@ -8,8 +10,6 @@ import Option "mo:base/Option";
 import Principal "mo:base/Principal";
 import Text "mo:base/Text";
 import Time "mo:base/Time";
-import Int "mo:base/Int";
-import Buffer "mo:base/Buffer";
 
 persistent actor LockInResponsible {
 
@@ -163,18 +163,7 @@ persistent actor LockInResponsible {
       };
     }
   };
-
-  // Helper: Count eligible validators
-  private func getEligibleValidatorsCount() : Nat {
-    var count = 0;
-    for ((userId, stats) in userStats.entries()) {
-      if (stats.completedGoals > 0) {
-        count += 1;
-      };
-    };
-    count
-  };
-
+  
   // Create a new goal (on-chain storage!)
   public shared(msg) func createGoal(
     title: Text,
@@ -234,68 +223,23 @@ persistent actor LockInResponsible {
           return false;
         };
 
-        // Check if there are any eligible validators
-        let eligibleValidators = getEligibleValidatorsCount();
-
-        // If no validators exist, auto-approve the goal
-        if (eligibleValidators == 0) {
-          let updatedGoal = {
-            id = goal.id;
-            userId = goal.userId;
-            title = goal.title;
-            description = goal.description;
-            goalType = goal.goalType;
-            deadline = goal.deadline;
-            createdAt = goal.createdAt;
-            status = #Completed; // Auto-approve when no validators
-            proof = ?proof;
-            tokensReward = goal.tokensReward;
-          };
-          goals.put(goalId, updatedGoal);
-
-          // Award tokens
-          let currentTokens = Option.get(userTokens.get(goal.userId), 0);
-          userTokens.put(goal.userId, currentTokens + goal.tokensReward);
-
-          // Update user stats
-          let stats = getOrCreateUserStats(goal.userId);
-          let newStreak = stats.currentStreak + 1;
-          let updatedStats = {
-            totalGoals = stats.totalGoals;
-            completedGoals = stats.completedGoals + 1;
-            failedGoals = stats.failedGoals;
-            currentStreak = newStreak;
-            longestStreak = if (newStreak > stats.longestStreak) { newStreak } else { stats.longestStreak };
-            totalTokens = currentTokens + goal.tokensReward;
-          };
-          userStats.put(goal.userId, updatedStats);
-
-          return true;
-        };
-
         // Create verification request if validators exist
         let verificationResult = await createVerificationRequest(goalId, proof, null);
 
-        switch (verificationResult) {
-          case (?requestId) {
-            // Update goal status to in review
-            let updatedGoal = {
-              id = goal.id;
-              userId = goal.userId;
-              title = goal.title;
-              description = goal.description;
-              goalType = goal.goalType;
-              deadline = goal.deadline;
-              createdAt = goal.createdAt;
-              status = #InReview; // Set to InReview while being validated
-              proof = ?proof;
-              tokensReward = goal.tokensReward;
-            };
-            goals.put(goalId, updatedGoal);
-            true
-          };
-          case null { false };
-        }
+        let updatedGoal = {
+          id = goal.id;
+          userId = goal.userId;
+          title = goal.title;
+          description = goal.description;
+          goalType = goal.goalType;
+          deadline = goal.deadline;
+          createdAt = goal.createdAt;
+          status = #InReview;
+          proof = ?proof;
+          tokensReward = goal.tokensReward;
+        };
+        goals.put(goalId, updatedGoal);
+        true
       };
       case null { false };
     }
@@ -506,9 +450,14 @@ persistent actor LockInResponsible {
           return null;
         };
 
-        // Select 5 random validators
-        let selectedValidators = selectRandomValidators(5);
-
+        var allUserIds = Buffer.Buffer<ValidatorId>(0);
+        // remove the user itself from the validator pool
+        for ((userId, _) in userStats.entries()) {
+          if (userId != caller) {
+            allUserIds.add(userId);
+          };
+        };
+        let selectedValidators = Buffer.toArray(allUserIds);  
         let requestId = nextVerificationRequestId;
         nextVerificationRequestId += 1;
 
@@ -551,12 +500,6 @@ persistent actor LockInResponsible {
           return false;
         };
 
-        // Check if already submitted
-        let hasSubmitted = Array.find<Verdict>(request.verdicts, func(v) { v.validator == caller });
-        if (hasSubmitted != null) {
-          return false;
-        };
-
         // Add verdict
         let verdict : Verdict = {
           validator = caller;
@@ -582,11 +525,10 @@ persistent actor LockInResponsible {
 
         verificationRequests.put(requestId, updatedRequest);
 
-        // Calculate consensus when all validators have voted or we have enough votes
         let totalValidators = updatedRequest.validators.size();
-        let requiredVotes = if (totalValidators >= 5) { 3 } else { (totalValidators + 1) / 2 };
+        let enoughVotes = totalValidators >= 2 ; // obv update this
 
-        if (updatedRequest.verdicts.size() >= totalValidators or updatedRequest.verdicts.size() >= requiredVotes) {
+        if (enoughVotes) {
           ignore calculateConsensus(requestId);
         };
 
@@ -761,33 +703,5 @@ persistent actor LockInResponsible {
       };
       case null {};
     }
-  };
-
-  // Helper: Select random validators from users who have submitted proofs
-  private func selectRandomValidators(count: Nat) : [ValidatorId] {
-    // Get all users who have completed at least one goal
-    let eligibleUsers = Buffer.Buffer<ValidatorId>(0);
-
-    for ((userId, stats) in userStats.entries()) {
-      if (stats.completedGoals > 0) {
-        eligibleUsers.add(userId);
-      };
-    };
-
-    let available = Buffer.toArray(eligibleUsers);
-
-    if (available.size() <= count) {
-      return available;
-    };
-
-    // Simple random selection (in production, use better randomness)
-    let selected = Buffer.Buffer<ValidatorId>(count);
-    var i = 0;
-    while (i < count and i < available.size()) {
-      selected.add(available[i]);
-      i += 1;
-    };
-
-    Buffer.toArray(selected)
   };
 }
