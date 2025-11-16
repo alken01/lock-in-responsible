@@ -530,8 +530,8 @@ persistent actor LockInResponsible {
 
         verificationRequests.put(requestId, updatedRequest);
 
-        // Trigger consensus after minimum 3 votes
-        let enoughVotes = updatedRequest.verdicts.size() >= 3;
+        // Trigger consensus after minimum 2 votes
+        let enoughVotes = updatedRequest.verdicts.size() >= 2;
 
         if (enoughVotes) {
           ignore calculateConsensus(requestId);
