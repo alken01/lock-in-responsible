@@ -148,42 +148,42 @@ export function ICPIntegration() {
             </div>
 
             {/* Balances Grid */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2 sm:gap-3">
               {/* ICP Balance */}
-              <div className="p-4 bg-secondary border-2 border-neon-cyan/30 relative">
+              <div className="p-3 sm:p-4 bg-secondary border-2 border-neon-cyan/30 relative">
                 <div className="absolute -top-2 left-2 bg-card px-2 text-neon-cyan text-[10px] font-mono border border-neon-cyan/30">
                   [ ICP ]
                 </div>
                 <div className="mt-2">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="p-1.5 bg-neon-cyan/20 border-2 border-neon-cyan/50">
-                      <Coins className="h-5 w-5 text-neon-cyan" />
+                  <div className="flex items-center gap-1 sm:gap-2 mb-2">
+                    <div className="p-1 sm:p-1.5 bg-neon-cyan/20 border-2 border-neon-cyan/50">
+                      <Coins className="h-4 w-4 sm:h-5 sm:w-5 text-neon-cyan" />
                     </div>
                     <p className="text-[10px] text-muted-foreground font-mono">
-                      // BALANCE
+                      // BAL
                     </p>
                   </div>
-                  <p className="text-2xl font-bold text-neon-cyan font-mono">
+                  <p className="text-xl sm:text-2xl font-bold text-neon-cyan font-mono break-all">
                     {icpBalance.toFixed(4)}
                   </p>
                 </div>
               </div>
 
               {/* Token Balance */}
-              <div className="p-4 bg-secondary border-2 border-neon-purple/30 relative">
+              <div className="p-3 sm:p-4 bg-secondary border-2 border-neon-purple/30 relative">
                 <div className="absolute -top-2 left-2 bg-card px-2 text-neon-purple text-[10px] font-mono border border-neon-purple/30">
                   [ TOK ]
                 </div>
                 <div className="mt-2">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="p-1.5 bg-neon-purple/20 border-2 border-neon-purple/50">
-                      <Trophy className="h-5 w-5 text-neon-purple" />
+                  <div className="flex items-center gap-1 sm:gap-2 mb-2">
+                    <div className="p-1 sm:p-1.5 bg-neon-purple/20 border-2 border-neon-purple/50">
+                      <Trophy className="h-4 w-4 sm:h-5 sm:w-5 text-neon-purple" />
                     </div>
                     <p className="text-[10px] text-muted-foreground font-mono">
-                      // EARNED
+                      // EARN
                     </p>
                   </div>
-                  <p className="text-2xl font-bold text-neon-purple font-mono">
+                  <p className="text-xl sm:text-2xl font-bold text-neon-purple font-mono">
                     {tokens}
                   </p>
                 </div>
@@ -192,35 +192,35 @@ export function ICPIntegration() {
 
             {/* Quick Stats */}
             {stats && (
-              <div className="grid grid-cols-2 gap-3">
-                <div className="p-3 bg-secondary border-2 border-neon-purple/30 relative">
+              <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                <div className="p-2 sm:p-3 bg-secondary border-2 border-neon-purple/30 relative">
                   <div className="absolute -top-2 left-2 bg-card px-2 text-neon-purple text-[10px] font-mono border border-neon-purple/30">
-                    [ COMPLETED ]
+                    [ DONE ]
                   </div>
                   <div className="mt-2">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Trophy className="h-4 w-4 text-neon-purple" />
+                    <div className="flex items-center gap-1 sm:gap-2 mb-1">
+                      <Trophy className="h-3 w-3 sm:h-4 sm:w-4 text-neon-purple" />
                       <p className="text-[10px] text-muted-foreground font-mono">
                         // GOALS
                       </p>
                     </div>
-                    <p className="text-xl font-bold text-neon-purple font-mono">
+                    <p className="text-lg sm:text-xl font-bold text-neon-purple font-mono">
                       {stats.completedGoals}
                     </p>
                   </div>
                 </div>
-                <div className="p-3 bg-secondary border-2 border-neon-green/30 relative">
+                <div className="p-2 sm:p-3 bg-secondary border-2 border-neon-green/30 relative">
                   <div className="absolute -top-2 left-2 bg-card px-2 text-neon-green text-[10px] font-mono border border-neon-green/30">
                     [ STREAK ]
                   </div>
                   <div className="mt-2">
-                    <div className="flex items-center gap-2 mb-1">
-                      <TrendingUp className="h-4 w-4 text-neon-green" />
+                    <div className="flex items-center gap-1 sm:gap-2 mb-1">
+                      <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-neon-green" />
                       <p className="text-[10px] text-muted-foreground font-mono">
-                        // CURRENT
+                        // NOW
                       </p>
                     </div>
-                    <p className="text-xl font-bold text-neon-green font-mono">
+                    <p className="text-lg sm:text-xl font-bold text-neon-green font-mono">
                       {stats.currentStreak}
                     </p>
                   </div>

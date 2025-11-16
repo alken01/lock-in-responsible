@@ -18,8 +18,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        mono: ['JetBrains Mono', 'Share Tech Mono', 'monospace'],
-        terminal: ['Share Tech Mono', 'monospace'],
+        mono: ['Zed Mono', 'monospace'],
+        terminal: ['Zed Mono', 'monospace'],
       },
       colors: {
         border: "hsl(var(--border))",

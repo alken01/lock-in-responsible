@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 
 export default function Dashboard() {
-  const { principal, logout } = useAuthStore();
+  const { logout } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -38,18 +38,18 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-background pixel-grid">
+    <div className="min-h-screen bg-background pixel-grid overflow-x-hidden">
       {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b-2 border-neon-cyan bg-background scanlines">
-        <div className="container flex h-16 items-center justify-between px-4">
-          <div className="flex items-center gap-3">
-            <Lock className="h-6 w-6 text-neon-cyan" />
-            <div className="font-mono">
-              <div className="text-neon-cyan font-bold text-lg">
-                &gt; LOCK_IN_RESPONSIBLE
+      <header className="sticky top-0 z-50 w-full border-b-2 border-neon-cyan bg-background scanlines overflow-x-hidden">
+        <div className="container flex h-16 items-center justify-between px-4 max-w-full">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+            <Lock className="h-5 w-5 sm:h-6 sm:w-6 text-neon-cyan flex-shrink-0" />
+            <div className="font-mono min-w-0">
+              <div className="text-neon-cyan font-bold text-sm sm:text-lg truncate">
+                &gt; LOCK_IN
               </div>
-              <div className="text-neon-purple text-xs">
-                // Accountability Protocol v1.0
+              <div className="text-neon-purple text-[10px] sm:text-xs truncate">
+                // Protocol v1.0
               </div>
             </div>
           </div>
@@ -70,16 +70,12 @@ export default function Dashboard() {
             ))}
           </nav>
 
-          <div className="flex items-center gap-4">
-            <div className="hidden md:flex items-center gap-2 text-sm font-mono">
-              <span className="text-muted-foreground">USER:</span>
-              <span className="font-medium text-xs text-neon-purple">{principal?.toString().slice(0, 10)}...</span>
-            </div>
+          <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
             <Button
               variant="ghost"
               size="icon"
               onClick={handleLogout}
-              className="hidden md:flex border-2 border-neon-pink/30 hover:border-neon-pink hover:bg-neon-pink/10 transition-all"
+              className="border-2 border-neon-pink/30 hover:border-neon-pink hover:bg-neon-pink/10 transition-all h-9 w-9 sm:h-10 sm:w-10"
             >
               <LogOut className="h-4 w-4 text-neon-pink" />
             </Button>
@@ -88,10 +84,10 @@ export default function Dashboard() {
             <Button
               variant="ghost"
               size="icon"
-              className="md:hidden border-2 border-neon-cyan/30 hover:border-neon-cyan hover:bg-neon-cyan/10"
+              className="md:hidden border-2 border-neon-cyan/30 hover:border-neon-cyan hover:bg-neon-cyan/10 h-9 w-9 sm:h-10 sm:w-10"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
-              {mobileMenuOpen ? <X className="h-5 w-5 text-neon-cyan" /> : <Menu className="h-5 w-5 text-neon-cyan" />}
+              {mobileMenuOpen ? <X className="h-4 w-4 text-neon-cyan" /> : <Menu className="h-4 w-4 text-neon-cyan" />}
             </Button>
           </div>
         </div>
@@ -129,7 +125,7 @@ export default function Dashboard() {
       </header>
 
       {/* Main Content */}
-      <main className="container py-6 px-4">
+      <main className="container py-4 sm:py-6 px-4 max-w-full overflow-x-hidden">
         <Outlet />
       </main>
     </div>

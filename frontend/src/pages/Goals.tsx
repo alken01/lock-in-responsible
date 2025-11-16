@@ -184,28 +184,28 @@ export default function Goals() {
   };
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-8 sm:space-y-12 overflow-x-hidden">
       {/* Today's Goals Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Main Content */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-4 sm:space-y-6 min-w-0">
           {/* Header */}
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold">Today's Goals</h1>
-              <p className="text-muted-foreground">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+            <div className="min-w-0">
+              <h1 className="text-2xl sm:text-3xl font-bold truncate">Today's Goals</h1>
+              <p className="text-muted-foreground text-sm sm:text-base">
                 {completedGoals.length} of {todayGoals.length} goals completed
               </p>
             </div>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={scrollToCommunity}>
-                <Users className="h-4 w-4 mr-2" />
-                Community
-                <ArrowDown className="h-4 w-4 ml-2" />
+            <div className="flex gap-2 flex-shrink-0">
+              <Button variant="outline" onClick={scrollToCommunity} size="sm" className="sm:text-base">
+                <Users className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Community</span>
+                <ArrowDown className="h-4 w-4 sm:ml-2" />
               </Button>
-              <Button onClick={() => setShowCreateForm(!showCreateForm)}>
-                <Plus className="h-4 w-4 mr-2" />
-                New Goal
+              <Button onClick={() => setShowCreateForm(!showCreateForm)} size="sm" className="sm:text-base">
+                <Plus className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">New Goal</span>
               </Button>
             </div>
           </div>
@@ -416,14 +416,14 @@ export default function Goals() {
       </div>
 
       {/* History Section */}
-      <div className="space-y-6 pt-6 border-t">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold flex items-center gap-2">
-              <HistoryIcon className="w-6 h-6" />
+      <div className="space-y-4 sm:space-y-6 pt-4 sm:pt-6 border-t overflow-x-hidden">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+          <div className="min-w-0">
+            <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
+              <HistoryIcon className="w-5 h-5 sm:w-6 sm:h-6" />
               Recent History
             </h2>
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground text-sm sm:text-base">
               Your goal history stored immutably on-chain
             </p>
           </div>
@@ -431,8 +431,10 @@ export default function Goals() {
             <Button
               variant="outline"
               onClick={() => navigate('/dashboard/history')}
+              size="sm"
+              className="sm:text-base flex-shrink-0"
             >
-              View All History
+              View All
             </Button>
           )}
         </div>
@@ -507,42 +509,42 @@ export default function Goals() {
       </div>
 
       {/* Community Section */}
-      <div ref={communityRef} className="space-y-6 pt-6 border-t">
+      <div ref={communityRef} className="space-y-4 sm:space-y-6 pt-4 sm:pt-6 border-t overflow-x-hidden">
         {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Users className="w-8 h-8" />
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
+            <Users className="w-6 h-6 sm:w-8 sm:h-8" />
             Community Goals
           </h1>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-muted-foreground mt-1 text-sm sm:text-base">
             See what everyone is working on and stay motivated together
           </p>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
           <Card>
-            <CardHeader className="pb-3">
-              <CardDescription>Total Goals</CardDescription>
-              <CardTitle className="text-3xl">{allGoals.length}</CardTitle>
+            <CardHeader className="pb-2 sm:pb-3">
+              <CardDescription className="text-xs sm:text-sm">Total Goals</CardDescription>
+              <CardTitle className="text-2xl sm:text-3xl">{allGoals.length}</CardTitle>
             </CardHeader>
           </Card>
           <Card>
-            <CardHeader className="pb-3">
-              <CardDescription>Active Users</CardDescription>
-              <CardTitle className="text-3xl">{totalUsers}</CardTitle>
+            <CardHeader className="pb-2 sm:pb-3">
+              <CardDescription className="text-xs sm:text-sm">Active Users</CardDescription>
+              <CardTitle className="text-2xl sm:text-3xl">{totalUsers}</CardTitle>
             </CardHeader>
           </Card>
           <Card>
-            <CardHeader className="pb-3">
-              <CardDescription>Completed</CardDescription>
-              <CardTitle className="text-3xl text-green-600">{communityCompletedGoals}</CardTitle>
+            <CardHeader className="pb-2 sm:pb-3">
+              <CardDescription className="text-xs sm:text-sm">Completed</CardDescription>
+              <CardTitle className="text-2xl sm:text-3xl text-green-600">{communityCompletedGoals}</CardTitle>
             </CardHeader>
           </Card>
           <Card>
-            <CardHeader className="pb-3">
-              <CardDescription>In Progress</CardDescription>
-              <CardTitle className="text-3xl text-blue-600">{pendingGoals}</CardTitle>
+            <CardHeader className="pb-2 sm:pb-3">
+              <CardDescription className="text-xs sm:text-sm">In Progress</CardDescription>
+              <CardTitle className="text-2xl sm:text-3xl text-blue-600">{pendingGoals}</CardTitle>
             </CardHeader>
           </Card>
         </div>

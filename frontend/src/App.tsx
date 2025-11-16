@@ -1,14 +1,14 @@
-import { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useAuthStore } from './store/authStore';
-import Login from './pages/Login';
+import { useEffect } from 'react';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import Community from "./pages/Community";
 import Dashboard from './pages/Dashboard';
-import Goals from './pages/Goals';
-import Community from './pages/Community';
+import Goals from "./pages/Goals";
 import History from './pages/History';
+import Login from "./pages/Login";
 import Settings from './pages/Settings';
 import Voting from './pages/Voting';
+import { useAuthStore } from "./store/authStore";
 
 const queryClient = new QueryClient({
   defaultOptions: {

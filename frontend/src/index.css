@@ -1,4 +1,59 @@
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Share+Tech+Mono&display=swap');
+/* Zed Mono Font Faces */
+@font-face {
+  font-family: 'Zed Mono';
+  src: url('/zed-mono-regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Zed Mono';
+  src: url('/zed-mono-italic.ttf') format('truetype');
+  font-weight: 400;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Zed Mono';
+  src: url('/zed-mono-medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Zed Mono';
+  src: url('/zed-mono-mediumitalic.ttf') format('truetype');
+  font-weight: 500;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Zed Mono';
+  src: url('/zed-mono-semibold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Zed Mono';
+  src: url('/zed-mono-semibolditalic.ttf') format('truetype');
+  font-weight: 600;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Zed Mono';
+  src: url('/zed-mono-bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Zed Mono';
+  src: url('/zed-mono-bolditalic.ttf') format('truetype');
+  font-weight: 700;
+  font-style: italic;
+}
 
 @tailwind base;
 @tailwind components;
@@ -80,9 +135,22 @@
     @apply border-border;
   }
 
+  html {
+    overflow-x: hidden;
+    width: 100%;
+  }
+
   body {
     @apply bg-background text-foreground;
-    font-family: 'JetBrains Mono', 'Share Tech Mono', monospace;
+    font-family: 'Zed Mono', monospace;
+    overflow-x: hidden;
+    width: 100%;
+    position: relative;
+  }
+
+  #root {
+    overflow-x: hidden;
+    width: 100%;
   }
 
   /* Cyberpunk glow effects */
@@ -258,5 +326,24 @@
       linear-gradient(hsl(var(--neon-cyan) / 0.03) 1px, transparent 1px),
       linear-gradient(90deg, hsl(var(--neon-cyan) / 0.03) 1px, transparent 1px);
     background-size: 20px 20px;
+  }
+
+  /* Mobile optimizations */
+  @media (max-width: 640px) {
+    .container {
+      padding-left: 1rem;
+      padding-right: 1rem;
+    }
+  }
+
+  /* Prevent text overflow */
+  p, span, div {
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+  }
+
+  /* Prevent long principal IDs from causing overflow */
+  .font-mono {
+    word-break: break-all;
   }
 }
