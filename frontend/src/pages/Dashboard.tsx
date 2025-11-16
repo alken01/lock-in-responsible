@@ -38,13 +38,20 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pixel-grid">
       {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-14 items-center justify-between px-4">
-          <div className="flex items-center gap-2">
-            <Lock className="h-6 w-6 text-primary" />
-            <span className="font-bold">Lock-In Responsible</span>
+      <header className="sticky top-0 z-50 w-full border-b-2 border-neon-cyan bg-background scanlines">
+        <div className="container flex h-16 items-center justify-between px-4">
+          <div className="flex items-center gap-3">
+            <Lock className="h-6 w-6 text-neon-cyan" />
+            <div className="font-mono">
+              <div className="text-neon-cyan font-bold text-lg">
+                &gt; LOCK_IN_RESPONSIBLE
+              </div>
+              <div className="text-neon-purple text-xs">
+                // Accountability Protocol v1.0
+              </div>
+            </div>
           </div>
 
           {/* Desktop Navigation */}
@@ -53,8 +60,8 @@ export default function Dashboard() {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center gap-2 text-sm font-medium transition-colors hover:text-primary ${
-                  isActive(item.path) ? 'text-primary' : 'text-muted-foreground'
+                className={`flex items-center gap-2 text-sm font-medium font-mono transition-colors hover:text-neon-cyan ${
+                  isActive(item.path) ? 'text-neon-cyan' : 'text-muted-foreground'
                 }`}
               >
                 <item.icon className="h-4 w-4" />
@@ -64,35 +71,35 @@ export default function Dashboard() {
           </nav>
 
           <div className="flex items-center gap-4">
-            <div className="hidden md:flex items-center gap-2 text-sm">
-              <span className="text-muted-foreground">Welcome,</span>
-              <span className="font-medium text-xs">{principal?.toString().slice(0, 10)}...</span>
+            <div className="hidden md:flex items-center gap-2 text-sm font-mono">
+              <span className="text-muted-foreground">USER:</span>
+              <span className="font-medium text-xs text-neon-purple">{principal?.toString().slice(0, 10)}...</span>
             </div>
             <Button
               variant="ghost"
               size="icon"
               onClick={handleLogout}
-              className="hidden md:flex"
+              className="hidden md:flex border-2 border-neon-pink/30 hover:border-neon-pink hover:bg-neon-pink/10 transition-all"
             >
-              <LogOut className="h-4 w-4" />
+              <LogOut className="h-4 w-4 text-neon-pink" />
             </Button>
 
             {/* Mobile menu button */}
             <Button
               variant="ghost"
               size="icon"
-              className="md:hidden"
+              className="md:hidden border-2 border-neon-cyan/30 hover:border-neon-cyan hover:bg-neon-cyan/10"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
-              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              {mobileMenuOpen ? <X className="h-5 w-5 text-neon-cyan" /> : <Menu className="h-5 w-5 text-neon-cyan" />}
             </Button>
           </div>
         </div>
 
         {/* Mobile Navigation */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t">
-            <nav className="container py-4 space-y-2">
+          <div className="md:hidden border-t-2 border-neon-cyan/30">
+            <nav className="container py-4 space-y-2 font-mono">
               {navItems.map((item) => (
                 <Link
                   key={item.path}
@@ -100,8 +107,8 @@ export default function Dashboard() {
                   onClick={() => setMobileMenuOpen(false)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                     isActive(item.path)
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                      ? 'bg-neon-cyan/20 text-neon-cyan border-2 border-neon-cyan'
+                      : 'text-muted-foreground hover:bg-neon-cyan/10 hover:text-neon-cyan border-2 border-transparent'
                   }`}
                 >
                   <item.icon className="h-4 w-4" />
@@ -111,7 +118,7 @@ export default function Dashboard() {
               <Button
                 variant="ghost"
                 onClick={handleLogout}
-                className="w-full justify-start gap-2 text-sm font-medium text-muted-foreground hover:text-destructive"
+                className="w-full justify-start gap-2 text-sm font-medium text-neon-pink hover:bg-neon-pink/10 border-2 border-transparent hover:border-neon-pink"
               >
                 <LogOut className="h-4 w-4" />
                 Logout
