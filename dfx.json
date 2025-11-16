@@ -4,15 +4,6 @@
     "lock_in_backend": {
       "type": "motoko",
       "main": "canister/main.mo"
-    },
-    "lock_in_frontend": {
-      "type": "assets",
-      "source": ["frontend/dist"],
-      "dependencies": ["lock_in_backend"]
-    },
-    "internet_identity": {
-      "type": "pull",
-      "id": "rdmx6-jaaaa-aaaaa-aaadq-cai"
     }
   },
   "defaults": {
