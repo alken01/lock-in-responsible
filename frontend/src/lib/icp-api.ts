@@ -2,24 +2,10 @@ import { Actor, HttpAgent } from '@dfinity/agent';
 import { AuthClient } from '@dfinity/auth-client';
 import { Principal } from '@dfinity/principal';
 
-// Network configuration - single source of truth
-const NETWORK = import.meta.env.VITE_NETWORK || 'local'; // 'local' or 'mainnet'
-const IS_LOCAL = NETWORK === 'local';
-
-// Canister ID based on network
-const CANISTER_ID = IS_LOCAL
-  ? import.meta.env.VITE_LOCAL_CANISTER_ID
-  : import.meta.env.VITE_MAINNET_CANISTER_ID;
-
-// ICP Host based on network
-const ICP_HOST = IS_LOCAL
-  ? import.meta.env.VITE_LOCAL_HOST
-  : import.meta.env.VITE_MAINNET_HOST;
-
-// Internet Identity Provider based on network
-const II_PROVIDER = IS_LOCAL
-  ? import.meta.env.VITE_LOCAL_II_PROVIDER
-  : import.meta.env.VITE_MAINNET_II_PROVIDER;
+// ICP Playground Configuration
+const CANISTER_ID = import.meta.env.VITE_CANISTER_ID;
+const ICP_HOST = import.meta.env.VITE_HOST;
+const II_PROVIDER = import.meta.env.VITE_II_PROVIDER;
 
 // IDL (Interface Definition Language) for the canister
 const idlFactory = ({ IDL }: any) => {
@@ -117,25 +103,11 @@ class ICPClient {
   async init() {
     this.authClient = await AuthClient.create();
 
-    console.log(`🌐 Initializing agent - Network: ${NETWORK}, Host: ${ICP_HOST}`);
+    console.log(`🌐 Initializing agent - Host: ${ICP_HOST}`);
 
-    // Create agent with query signature verification disabled for local dev
     this.agent = await HttpAgent.create({
       host: ICP_HOST,
-      verifyQuerySignatures: !IS_LOCAL, // Disable for local to avoid cert issues
     });
-
-    // Fetch root key for local development
-    if (IS_LOCAL) {
-      try {
-        console.log('🔑 Fetching root key from local replica...');
-        await this.agent.fetchRootKey();
-        console.log('✅ Root key fetched successfully');
-      } catch (error) {
-        console.error('❌ Failed to fetch root key:', error);
-        throw new Error('Failed to connect to local ICP replica. Make sure dfx is running.');
-      }
-    }
 
     this.createActor();
   }
@@ -147,23 +119,10 @@ class ICPClient {
     if (identity) {
       console.log('🔄 Recreating agent with authenticated identity');
 
-      // Create agent with identity
       this.agent = await HttpAgent.create({
         host: ICP_HOST,
         identity,
-        verifyQuerySignatures: !IS_LOCAL, // Disable verification for local dev
       });
-
-      // Fetch root key for local development ONLY
-      if (IS_LOCAL && this.agent) {
-        try {
-          console.log('🔑 Fetching root key for local replica...');
-          await this.agent.fetchRootKey();
-          console.log('✅ Root key fetched for authenticated agent');
-        } catch (err) {
-          console.error('❌ Failed to fetch root key:', err);
-        }
-      }
     }
 
     if (this.agent) {
