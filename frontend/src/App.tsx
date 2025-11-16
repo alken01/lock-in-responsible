@@ -4,7 +4,12 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
 import Goals from "./pages/Goals";
 import Login from "./pages/Login";
+import Voting from "./pages/Voting";
+import History from "./pages/History";
+import Community from "./pages/Community";
+import Settings from "./pages/Settings";
 import { useAuthStore } from "./store/authStore";
+import { Toaster } from "./components/ui/toaster";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -57,10 +62,15 @@ function App() {
             }
           >
             <Route index element={<Goals />} />
+            <Route path="voting" element={<Voting />} />
+            <Route path="history" element={<History />} />
+            <Route path="community" element={<Community />} />
+            <Route path="settings" element={<Settings />} />
           </Route>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
+        <Toaster />
       </BrowserRouter>
     </QueryClientProvider>
   );

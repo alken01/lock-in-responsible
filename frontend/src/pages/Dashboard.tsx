@@ -1,11 +1,50 @@
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate, NavLink } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { Button } from '../components/ui/button';
-import { Lock, LogOut } from 'lucide-react';
+import { Badge } from '../components/ui/badge';
+import { Lock, LogOut, Target, CheckCircle, Users, History, Settings as SettingsIcon } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { icpClient } from '../lib/icp-api';
+import { useToast } from '../components/ui/use-toast';
+import { useEffect, useRef } from 'react';
 
 export default function Dashboard() {
   const { logout } = useAuthStore();
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const previousCountRef = useRef<number>(0);
+
+  // Query for pending verification requests
+  const { data: pendingRequests = [] } = useQuery({
+    queryKey: ['pending-verifications'],
+    queryFn: async () => {
+      const requests = await icpClient.getPendingRequests();
+      return requests;
+    },
+    refetchInterval: 5000, // Poll every 5 seconds
+  });
+
+  const pendingCount = pendingRequests.length;
+
+  // Show toast notification when new verification requests appear
+  useEffect(() => {
+    // Skip on initial mount
+    if (previousCountRef.current === 0 && pendingCount === 0) {
+      previousCountRef.current = pendingCount;
+      return;
+    }
+
+    // Show notification if count increased
+    if (pendingCount > previousCountRef.current) {
+      const newRequests = pendingCount - previousCountRef.current;
+      toast({
+        title: "🔔 New Verification Request" + (newRequests > 1 ? "s" : ""),
+        description: `You have ${newRequests} new proof${newRequests > 1 ? 's' : ''} to verify. Click the Voting tab to review.`,
+      });
+    }
+
+    previousCountRef.current = pendingCount;
+  }, [pendingCount, toast]);
 
   const handleLogout = async () => {
     await logout();
@@ -42,8 +81,91 @@ export default function Dashboard() {
         </div>
       </header>
 
+      {/* Navigation */}
+      <nav className="border-b-2 border-neon-cyan/30 bg-background/95 backdrop-blur sticky top-16 z-40">
+        <div className="container px-4 max-w-full">
+          <div className="flex items-center gap-1 overflow-x-auto">
+            <NavLink
+              to="/dashboard"
+              end
+              className={({ isActive }) =>
+                `flex items-center gap-2 px-3 py-3 text-sm font-medium transition-colors border-b-2 whitespace-nowrap ${
+                  isActive
+                    ? 'border-neon-cyan text-neon-cyan'
+                    : 'border-transparent text-muted-foreground hover:text-foreground hover:border-neon-cyan/50'
+                }`
+              }
+            >
+              <Target className="h-4 w-4" />
+              <span>Goals</span>
+            </NavLink>
+
+            <NavLink
+              to="/dashboard/voting"
+              className={({ isActive }) =>
+                `flex items-center gap-2 px-3 py-3 text-sm font-medium transition-colors border-b-2 whitespace-nowrap ${
+                  isActive
+                    ? 'border-neon-cyan text-neon-cyan'
+                    : 'border-transparent text-muted-foreground hover:text-foreground hover:border-neon-cyan/50'
+                }`
+              }
+            >
+              <CheckCircle className="h-4 w-4" />
+              <span>Voting</span>
+              {pendingCount > 0 && (
+                <Badge className="bg-neon-pink text-white ml-1 px-2">
+                  {pendingCount}
+                </Badge>
+              )}
+            </NavLink>
+
+            <NavLink
+              to="/dashboard/community"
+              className={({ isActive }) =>
+                `flex items-center gap-2 px-3 py-3 text-sm font-medium transition-colors border-b-2 whitespace-nowrap ${
+                  isActive
+                    ? 'border-neon-cyan text-neon-cyan'
+                    : 'border-transparent text-muted-foreground hover:text-foreground hover:border-neon-cyan/50'
+                }`
+              }
+            >
+              <Users className="h-4 w-4" />
+              <span>Community</span>
+            </NavLink>
+
+            <NavLink
+              to="/dashboard/history"
+              className={({ isActive }) =>
+                `flex items-center gap-2 px-3 py-3 text-sm font-medium transition-colors border-b-2 whitespace-nowrap ${
+                  isActive
+                    ? 'border-neon-cyan text-neon-cyan'
+                    : 'border-transparent text-muted-foreground hover:text-foreground hover:border-neon-cyan/50'
+                }`
+              }
+            >
+              <History className="h-4 w-4" />
+              <span>History</span>
+            </NavLink>
+
+            <NavLink
+              to="/dashboard/settings"
+              className={({ isActive }) =>
+                `flex items-center gap-2 px-3 py-3 text-sm font-medium transition-colors border-b-2 whitespace-nowrap ${
+                  isActive
+                    ? 'border-neon-cyan text-neon-cyan'
+                    : 'border-transparent text-muted-foreground hover:text-foreground hover:border-neon-cyan/50'
+                }`
+              }
+            >
+              <SettingsIcon className="h-4 w-4" />
+              <span>Settings</span>
+            </NavLink>
+          </div>
+        </div>
+      </nav>
+
       {/* Main Content */}
-      <main className="container py-4 sm:py-6 px-4 max-w-full overflow-x-hidden">
+      <main className="container py-4 sm:py-6 px-4 max-w-full overflow-x-hidden mt-2">
         <Outlet />
       </main>
     </div>
