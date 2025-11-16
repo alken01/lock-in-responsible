@@ -11,7 +11,7 @@ Commit your goals to the blockchain. Get verified by a decentralized AI network.
 
 ## What Is This?
 
-Lock-In Responsible helps you achieve your goals through **cryptographic commitment**, **AI verification**, and **economic incentives**.
+Lock-In Responsible helps you achieve your goals through **cryptographic commitment**, **community verification**, and **economic incentives**.
 
 ### The Problem
 - 88% of people fail their New Year's resolutions
@@ -19,12 +19,12 @@ Lock-In Responsible helps you achieve your goals through **cryptographic commitm
 - You can delete tasks, reset apps, and pretend failures never happened
 
 ### The Solution
-**Blockchain-immutable goals + Decentralized AI validation = Real accountability**
+**Blockchain-immutable goals + Community-driven validation = Real accountability**
 
 1. **Create a goal** → Stored on ICP blockchain (can't delete)
 2. **Complete it** → Submit text proof
-3. **Get verified** → 5 random AI validators check your proof
-4. **Earn rewards** → Receive 10 tokens if 3/5 validators approve
+3. **Get verified** → 5 random community members vote on your proof
+4. **Earn rewards** → Receive 10 tokens if 3/5 voters approve
 5. **Build streaks** → Compete on the global leaderboard
 
 ---
@@ -118,10 +118,12 @@ npm run dev
 ```
 lock-in-responsible/
 ├── canister/           # ICP smart contract (Motoko)
-│   └── main.mo        # Goals, validators, consensus, tokens
-├── frontend/          # React web app
-│   └── src/          # Direct ICP communication
-├── validator-node/    # Validator daemon (for validators)
+│   └── main.mo        # Goals, voting, consensus, tokens
+├── frontend/          # React + TypeScript web app
+│   ├── src/pages/    # Goals, Voting, Dashboard, History
+│   ├── src/lib/      # ICP integration & utilities
+│   └── src/store/    # State management (Zustand)
+├── validator-node/    # Optional: AI validator daemon
 └── dfx.json          # ICP configuration
 ```
 
@@ -135,9 +137,11 @@ dfx start --clean
 dfx deploy lock_in_backend
 cd frontend && npm install && npm run dev
 
-# Terminal 3 (Optional): Run a validator node
+# Optional: Run an AI validator node
 cd validator-node && npm install && npm start
 ```
+
+**Note**: The validator node is optional. Users with completed goals can vote on proofs directly through the web interface!
 
 ### Useful Commands
 
@@ -219,25 +223,39 @@ npm install
 
 ## 🎯 How It Works
 
+### Community-Based Verification Flow
+
 ```
 1. User creates goal
    ↓
-2. Goal stored on ICP (immutable)
+2. Goal stored on ICP blockchain (immutable)
    ↓
-3. User submits proof (text description)
+3. User completes goal and submits text proof
    ↓
-4. ICP canister selects 5 random validators
+4. ICP canister checks for eligible voters
+   │
+   ├─ NO VOTERS? → Auto-approve (bootstrapping)
+   │                ├─ Award 10 tokens immediately
+   │                └─ Goal marked complete
+   │
+   └─ VOTERS EXIST? → Create verification request
+                      ↓
+5. System selects 5 random voters (users with completed goals)
    ↓
-5. Each validator analyzes proof with LLM
+6. Voters review proof in Voting page
    ↓
-6. Validators submit verdicts (verified: yes/no, confidence: 0-100)
+7. Each voter submits: Approve 👍 or Reject 👎
    ↓
-7. ICP calculates consensus (3/5 = approved)
+8. Consensus: 3/5 votes needed for approval
    ↓
-8. Correct validators paid, wrong ones slashed
-   ↓
-9. User earns 10 tokens if approved
+9. Rewards distributed:
+   ├─ Correct voters: +1 reputation, split verification fee
+   ├─ Wrong voters: -1 reputation
+   └─ Goal creator: 10 tokens (if approved)
 ```
+
+### Key Innovation: Bootstrapping Mechanism
+First-time users get **auto-approved** when no voters exist yet. Once users complete goals, they become eligible voters, creating an organic validator pool!
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed system design.
 
@@ -248,10 +266,14 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed system design.
 | Component | Technology |
 |-----------|------------|
 | **Smart Contract** | Motoko (ICP) |
-| **Frontend** | React + TypeScript + Vite |
-| **Validators** | Node.js + Ollama/OpenAI/Anthropic |
-| **Auth** | Internet Identity |
+| **Frontend** | React 18 + TypeScript + Vite |
+| **UI Framework** | Tailwind CSS + shadcn/ui (Radix UI) |
+| **State Management** | Zustand + TanStack React Query |
+| **Routing** | React Router v6 |
+| **Validators (Optional)** | Node.js + Ollama/OpenAI/Anthropic |
+| **Auth** | Internet Identity (Passwordless) |
 | **Storage** | ICP stable memory |
+| **Deployment** | Vercel (Frontend) + ICP Network (Backend) |
 
 ---
 
@@ -265,71 +287,109 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed system design.
 
 ---
 
-## 🌐 Deploying to Mainnet
+## 🌐 Deploying to Production
 
 ### Prerequisites
 - ICP cycles (fuel for canister operations)
 - Get free cycles: https://faucet.dfinity.org
+- Vercel account (for frontend hosting)
 
-### Deploy to IC Mainnet
+### Step 1: Deploy Backend to IC Mainnet
 
 ```bash
-# 1. Deploy to mainnet
+# Deploy canister to ICP mainnet
 dfx deploy --network ic lock_in_backend
 
-# 2. Get your mainnet canister ID
+# Get your mainnet canister ID
 dfx canister id lock_in_backend --network ic
-
-# 3. Update frontend/.env for production
-VITE_ICP_CANISTER_ID=<mainnet-canister-id>
-VITE_ICP_NETWORK=production
-
-# 4. Build frontend
-cd frontend
-npm run build
-
-# 5. Deploy frontend (e.g., to Vercel)
-vercel deploy
 ```
+
+### Step 2: Deploy Frontend to Vercel
+
+```bash
+cd frontend
+
+# Create production .env
+echo "VITE_ICP_CANISTER_ID=<your-mainnet-canister-id>" > .env
+echo "VITE_ICP_NETWORK=production" >> .env
+echo 'VITE_APP_NAME="Lock-In Responsible"' >> .env
+
+# Install Vercel CLI (if not installed)
+npm i -g vercel
+
+# Deploy to Vercel
+vercel deploy --prod
+```
+
+### Important: Vercel Configuration
+
+The project includes `frontend/vercel.json` for proper SPA routing:
+- Fixes 404 errors on page refresh
+- Enables direct URL access to all routes
+- Already configured - no changes needed!
+
+### Post-Deployment
+
+1. Test Internet Identity login on production
+2. Create a test goal and verify the flow
+3. Monitor canister cycles: `dfx canister status lock_in_backend --network ic`
 
 ---
 
 ## 💰 Economics
 
 ### For Users
-- **Create goal**: Free (ICP cycles)
-- **Verification fee**: $0.50 per proof
-- **Completion reward**: 10 tokens
-- **Streak bonus**: Compete on leaderboard
+- **Create goal**: Free (minimal ICP cycles)
+- **Verification fee**: 0.50 tokens per proof
+- **Completion reward**: 10 tokens (20x return!)
+- **Become a voter**: Complete 1+ goals
+- **Streak bonus**: Compete on global leaderboard
 
-### For Validators
-- **Stake**: 100 tokens minimum
-- **Earnings**: $0.10-0.50 per verification
-- **Requirements**: 99%+ uptime
-- **Slashing**: Wrong verdicts = -reputation
+### For Community Voters
+- **No stake required**: Any user with completed goals can vote
+- **Earnings**: Split verification fee among correct voters
+- **Example**: 4 correct voters → 0.125 tokens each
+- **Reputation system**:
+  - Correct vote: +1 reputation
+  - Wrong vote: -1 reputation
+- **Rewards**: Higher reputation = more voting opportunities
+
+### Token Flow Example
+```
+User submits proof → 0.50 token fee
+5 voters selected → Each votes
+Consensus: 4 approve, 1 reject
+Majority = Approved ✅
+→ Goal creator: +10 tokens
+→ 4 correct voters: +0.125 tokens each
+→ 1 wrong voter: -1 reputation
+```
 
 ---
 
 ## 📚 Documentation
 
-- [ARCHITECTURE.md](ARCHITECTURE.md) - Complete system architecture
-- [validator-node/README.md](validator-node/README.md) - Run a validator node
+- [ARCHITECTURE.md](ARCHITECTURE.md) - Complete system architecture and design decisions
 
 ---
 
 ## 🤝 Why This Works
 
 ### Psychological Principles
-1. **Commitment Device**: Public goals you can't delete
-2. **Loss Aversion**: Verification fees + reputation loss
-3. **Immediate Rewards**: Tokens earned instantly
-4. **Social Proof**: Global leaderboard competition
+1. **Commitment Device**: Public goals you can't delete or hide
+2. **Loss Aversion**: Verification fees create skin in the game
+3. **Immediate Rewards**: 10 tokens earned instantly upon approval
+4. **Social Proof**: Global leaderboard & community feed
+5. **Gamification**: Streaks, reputation, and token rewards
 
 ### Technical Innovation
-1. **Decentralized Verification**: No single trusted party
-2. **Economic Security**: Validators staked and slashed
-3. **Transparent**: All verdicts on-chain
-4. **Scalable**: More validators = more capacity
+1. **Community-Driven Verification**: Democratic voting by peers
+2. **Bootstrapping Mechanism**: Auto-approval for first users solves cold-start problem
+3. **Economic Incentives**: Voters earn tokens for accurate verdicts
+4. **Reputation System**: Track record of voting accuracy on-chain
+5. **Transparent**: All goals, proofs, and votes stored on blockchain
+6. **Scalable**: More users = larger voter pool = better security
+7. **No Gatekeeping**: Any user who completes a goal can vote
 
 ---
 
@@ -341,9 +401,37 @@ MIT License
 
 ## 🙏 Built With
 
-- Internet Computer Protocol (DFINITY)
-- OpenAI, Anthropic, Ollama (AI verification)
-- React, TypeScript, Vite, shadcn/ui
+- **Blockchain**: Internet Computer Protocol (DFINITY)
+- **Frontend**: React 18, TypeScript, Vite, Tailwind CSS
+- **UI Components**: shadcn/ui (Radix UI primitives)
+- **State Management**: Zustand, TanStack React Query
+- **Auth**: Internet Identity
+- **AI (Optional)**: OpenAI, Anthropic, Ollama
+- **Deployment**: Vercel + ICP Network
+
+---
+
+## 🆕 Recent Updates
+
+### ✅ Auto-Approval Bootstrapping (Latest)
+- First-time users get auto-approved when no voters exist
+- Solves chicken-and-egg problem for new platforms
+- Automatic transition to community voting as user base grows
+
+### ✅ Community-Based Voting
+- Any user with completed goals can vote on proofs
+- Democratic peer verification system
+- No staking or registration required to participate
+
+### ✅ Vercel Deployment Fix
+- Added proper SPA routing configuration
+- Fixed 404 errors on page refresh
+- Direct URL access now works correctly
+
+### ✅ Reputation System
+- Track voting accuracy on-chain
+- Rewards for correct verdicts
+- Consequences for wrong verdicts
 
 ---
 
