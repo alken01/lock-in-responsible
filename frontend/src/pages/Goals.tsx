@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
-import { Plus, Target, CheckCircle2, Circle, XCircle, Users, ArrowDown, History as HistoryIcon, Clock } from 'lucide-react';
+import { Plus, Target, CheckCircle2, Circle, XCircle, Users, ArrowDown, History as HistoryIcon, Clock, Eye } from 'lucide-react';
 import { ICPIntegration } from '../components/ICPIntegration';
 import { format } from 'date-fns';
 import { getStatusBadgeClass, getGoalTypeBadgeClass, getTokenBadgeClass } from '../lib/theme-config';
@@ -42,8 +42,15 @@ export default function Goals() {
     refetchInterval: 10000, // Refresh every 10 seconds
   });
 
+  const { data: goalsInReview = [], isLoading: reviewLoading } = useQuery({
+    queryKey: ['icp-goals-in-review'],
+    queryFn: icpGoalAPI.listInReview,
+    refetchInterval: 5000, // Refresh every 5 seconds
+  });
+
   console.log('🎯 Goals Query State:', { goals, isLoading, error });
   console.log('🌍 Community Goals Query State:', { allGoals, communityLoading });
+  console.log('🔍 Goals In Review State:', { goalsInReview, reviewLoading });
 
   const createGoalMutation = useMutation({
     mutationFn: async (data: {
@@ -118,6 +125,9 @@ export default function Goals() {
     g.status === 'Completed' || g.status === 'Verified'
   );
 
+  // Check if user has submitted any goals
+  const userHasSubmittedGoals = goals.length > 0;
+
   // Community section helpers
   const scrollToCommunity = () => {
     communityRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -148,6 +158,8 @@ export default function Goals() {
         return <CheckCircle2 className="w-5 h-5 text-neon-green" />;
       case 'Failed':
         return <XCircle className="w-5 h-5 text-neon-pink" />;
+      case 'InReview':
+        return <Eye className="w-5 h-5 text-yellow-500" />;
       default:
         return <Circle className="w-5 h-5 text-neon-cyan" />;
     }
@@ -178,6 +190,8 @@ export default function Goals() {
         return <CheckCircle2 className="h-5 w-5 text-neon-green" />;
       case 'Failed':
         return <XCircle className="h-5 w-5 text-neon-pink" />;
+      case 'InReview':
+        return <Eye className="h-5 w-5 text-yellow-500" />;
       default:
         return <Clock className="h-5 w-5 text-neon-cyan" />;
     }
@@ -312,6 +326,8 @@ export default function Goals() {
                     ? 'opacity-75 border-green-200'
                     : goal.status === 'Failed'
                     ? 'opacity-75 border-red-200'
+                    : goal.status === 'InReview'
+                    ? 'border-yellow-500/50'
                     : ''
                 }
               >
@@ -322,6 +338,8 @@ export default function Goals() {
                         <CheckCircle2 className="h-6 w-6 text-green-500 mt-0.5" />
                       ) : goal.status === 'Failed' ? (
                         <XCircle className="h-6 w-6 text-red-500 mt-0.5" />
+                      ) : goal.status === 'InReview' ? (
+                        <Eye className="h-6 w-6 text-yellow-500 mt-0.5" />
                       ) : (
                         <Circle className="h-6 w-6 text-muted-foreground mt-0.5" />
                       )}
@@ -364,6 +382,12 @@ export default function Goals() {
                             Mark Failed
                           </Button>
                         </>
+                      )}
+                      {goal.status === 'InReview' && (
+                        <div className="text-sm text-yellow-500 font-medium flex items-center gap-1">
+                          <Eye className="h-4 w-4" />
+                          Under Review
+                        </div>
                       )}
                     </div>
                   </div>
@@ -414,6 +438,93 @@ export default function Goals() {
           </div>
         </div>
       </div>
+
+      {/* Goals In Review Section - Only show to users who have submitted goals */}
+      {userHasSubmittedGoals && goalsInReview.length > 0 && (
+        <div className="space-y-4 sm:space-y-6 pt-4 sm:pt-6 border-t overflow-x-hidden">
+          <div className="min-w-0">
+            <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
+              <Eye className="w-5 h-5 sm:w-6 sm:h-6" />
+              Goals In Review
+            </h2>
+            <p className="text-muted-foreground text-sm sm:text-base">
+              Review and validate proof submissions from the community
+            </p>
+          </div>
+
+          {reviewLoading ? (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">Loading goals in review...</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {goalsInReview.map((goal: any) => (
+                <Card key={goal.id} className="hover:shadow-lg transition-shadow border-yellow-500/50">
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Eye className="w-5 h-5 text-yellow-500" />
+                          <CardTitle className="text-lg">{goal.title}</CardTitle>
+                        </div>
+                        <CardDescription className="line-clamp-2">
+                          {goal.description}
+                        </CardDescription>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {/* User Info */}
+                      <div className="flex items-center gap-2 text-sm">
+                        <Target className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-muted-foreground font-mono">
+                          {truncatePrincipal(goal.userId)}
+                        </span>
+                      </div>
+
+                      {/* Badges */}
+                      <div className="flex flex-wrap gap-2">
+                        <span className={getGoalTypeBadgeClass(goal.goalType)}>
+                          {goal.goalType}
+                        </span>
+                        <span className={getStatusBadgeClass(goal.status)}>
+                          {goal.status}
+                        </span>
+                        <span className={getTokenBadgeClass()}>
+                          {goal.tokensReward} TOK
+                        </span>
+                      </div>
+
+                      {/* Proof */}
+                      {goal.proof && (
+                        <div className="mt-3 pt-3 border-t">
+                          <p className="text-sm font-semibold mb-1">Proof Submitted:</p>
+                          <p className="text-sm text-muted-foreground italic line-clamp-3">
+                            {goal.proof}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Action Button */}
+                      <div className="pt-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full"
+                          onClick={() => navigate('/dashboard/voting')}
+                        >
+                          Review on Voting Page
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* History Section */}
       <div className="space-y-4 sm:space-y-6 pt-4 sm:pt-6 border-t overflow-x-hidden">

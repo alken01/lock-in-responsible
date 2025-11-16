@@ -27,7 +27,7 @@ export interface Goal {
   type: 'github_commits' | 'github_pr' | 'github_issues' | 'code_lines' | 'time_based' | 'custom';
   target: number;
   progress: number;
-  status: 'pending' | 'completed' | 'failed';
+  status: 'pending' | 'in_review' | 'completed' | 'failed';
   dueDate?: string;
   completedAt?: string;
   verifications?: Verification[];

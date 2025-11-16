@@ -30,6 +30,7 @@ persistent actor LockInResponsible {
 
   type GoalStatus = {
     #Pending;
+    #InReview;
     #Completed;
     #Failed;
     #Verified;
@@ -277,7 +278,7 @@ persistent actor LockInResponsible {
 
         switch (verificationResult) {
           case (?requestId) {
-            // Update goal status to pending verification
+            // Update goal status to in review
             let updatedGoal = {
               id = goal.id;
               userId = goal.userId;
@@ -286,7 +287,7 @@ persistent actor LockInResponsible {
               goalType = goal.goalType;
               deadline = goal.deadline;
               createdAt = goal.createdAt;
-              status = #Pending; // Keep as pending until verified
+              status = #InReview; // Set to InReview while being validated
               proof = ?proof;
               tokensReward = goal.tokensReward;
             };
@@ -366,6 +367,17 @@ persistent actor LockInResponsible {
     let buffer = Buffer.Buffer<Goal>(goals.size());
     for ((_, goal) in goals.entries()) {
       buffer.add(goal);
+    };
+    Buffer.toArray(buffer)
+  };
+
+  // Get all goals that are in review (for validation)
+  public query func getGoalsInReview() : async [Goal] {
+    let buffer = Buffer.Buffer<Goal>(goals.size());
+    for ((_, goal) in goals.entries()) {
+      if (goal.status == #InReview) {
+        buffer.add(goal);
+      };
     };
     Buffer.toArray(buffer)
   };

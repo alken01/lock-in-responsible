@@ -16,6 +16,11 @@ export const STATUS_COLORS = {
     text: 'text-neon-green',
     border: 'border-neon-green',
   },
+  InReview: {
+    bg: 'bg-yellow-500/20',
+    text: 'text-yellow-500',
+    border: 'border-yellow-500',
+  },
   Pending: {
     bg: 'bg-neon-cyan/20',
     text: 'text-neon-cyan',
