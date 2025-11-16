@@ -16,6 +16,9 @@ export default function Goals() {
   const [proofText, setProofText] = useState('');
   const [selectedGoalId, setSelectedGoalId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showReviewPanel, setShowReviewPanel] = useState(false);
+  const [selectedReviewGoalId, setSelectedReviewGoalId] = useState<number | null>(null);
+  const [reviewComment, setReviewComment] = useState('');
   const communityRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
   const location = useLocation();
@@ -107,6 +110,29 @@ export default function Goals() {
     mutationFn: icpGoalAPI.fail,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['icp-goals'] });
+    },
+  });
+
+  const verifyGoalMutation = useMutation({
+    mutationFn: async (data: { goalId: number; approved: boolean; comment: string }) => {
+      const actor = (icpClient as any).actor;
+      if (!actor) throw new Error('Not connected to ICP');
+
+      if (data.approved) {
+        // Approve the goal using verifyGoal
+        return await actor.verifyGoal(BigInt(data.goalId));
+      } else {
+        // Reject the goal using rejectGoal
+        return await actor.rejectGoal(BigInt(data.goalId));
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['icp-goals-in-review'] });
+      queryClient.invalidateQueries({ queryKey: ['icp-goals'] });
+      queryClient.invalidateQueries({ queryKey: ['icp-all-goals'] });
+      setSelectedReviewGoalId(null);
+      setReviewComment('');
+      setShowReviewPanel(false);
     },
   });
 
@@ -576,10 +602,137 @@ export default function Goals() {
               {/* Other users' goals to review */}
               {othersGoalsInReview.length > 0 && (
                 <div className="space-y-3">
-                  <h3 className="text-lg font-semibold flex items-center gap-2">
-                    <span>Review Others' Goals</span>
-                    <span className="text-sm font-normal text-muted-foreground">({othersGoalsInReview.length})</span>
-                  </h3>
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold flex items-center gap-2">
+                      <span>Review Others' Goals</span>
+                      <span className="text-sm font-normal text-muted-foreground">({othersGoalsInReview.length})</span>
+                    </h3>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setShowReviewPanel(!showReviewPanel)}
+                      className="flex items-center gap-2"
+                    >
+                      <Eye className="w-4 h-4" />
+                      {showReviewPanel ? 'Hide Review Panel' : 'Show Review Panel'}
+                    </Button>
+                  </div>
+
+                  {/* Review Panel */}
+                  {showReviewPanel && (
+                    <Card className="border-2 border-blue-500">
+                      <CardHeader>
+                        <CardTitle>Review Goals</CardTitle>
+                        <CardDescription>
+                          Select a goal below to review and approve or reject it
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="flex items-center gap-2">
+                          <label htmlFor="review-goal-select" className="text-sm font-medium whitespace-nowrap">
+                            Select Goal:
+                          </label>
+                          <select
+                            id="review-goal-select"
+                            value={selectedReviewGoalId || ''}
+                            onChange={(e) => setSelectedReviewGoalId(e.target.value ? Number(e.target.value) : null)}
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                          >
+                            <option value="">Choose a goal to review...</option>
+                            {othersGoalsInReview.map((goal: any) => (
+                              <option key={goal.id} value={goal.id}>
+                                Goal #{goal.id} - {goal.title}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {selectedReviewGoalId && (() => {
+                          const selectedGoal = othersGoalsInReview.find((g: any) => g.id === selectedReviewGoalId);
+                          return selectedGoal ? (
+                            <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
+                              <div>
+                                <h4 className="font-semibold text-lg mb-1">{selectedGoal.title}</h4>
+                                <p className="text-sm text-muted-foreground">{selectedGoal.description}</p>
+                              </div>
+
+                              <div className="flex items-center gap-2 text-sm">
+                                <Target className="w-4 h-4 text-muted-foreground" />
+                                <span className="text-muted-foreground">
+                                  Submitted by: <span className="font-mono">{truncatePrincipal(selectedGoal.userId)}</span>
+                                </span>
+                              </div>
+
+                              <div className="flex flex-wrap gap-2">
+                                <span className={getGoalTypeBadgeClass(selectedGoal.goalType)}>
+                                  {selectedGoal.goalType}
+                                </span>
+                                <span className={getStatusBadgeClass(selectedGoal.status)}>
+                                  {selectedGoal.status}
+                                </span>
+                                <span className={getTokenBadgeClass()}>
+                                  {selectedGoal.tokensReward} TOK
+                                </span>
+                              </div>
+
+                              {selectedGoal.proof && (
+                                <div className="pt-3 border-t">
+                                  <p className="text-sm font-semibold mb-2">Proof Submitted:</p>
+                                  <div className="p-3 bg-background rounded-md">
+                                    <p className="text-sm whitespace-pre-wrap">{selectedGoal.proof}</p>
+                                  </div>
+                                </div>
+                              )}
+
+                              <div className="pt-3 border-t space-y-3">
+                                <div>
+                                  <label htmlFor="review-comment" className="text-sm font-semibold mb-2 block">
+                                    Your Review (optional):
+                                  </label>
+                                  <textarea
+                                    id="review-comment"
+                                    value={reviewComment}
+                                    onChange={(e) => setReviewComment(e.target.value)}
+                                    placeholder="Add your review comments here..."
+                                    className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                  />
+                                </div>
+
+                                <div className="flex gap-2 justify-end">
+                                  <Button
+                                    onClick={() => verifyGoalMutation.mutate({
+                                      goalId: selectedGoal.id,
+                                      approved: false,
+                                      comment: reviewComment
+                                    })}
+                                    disabled={verifyGoalMutation.isPending}
+                                    variant="outline"
+                                    className="flex items-center gap-2 border-red-500 text-red-500 hover:bg-red-50"
+                                  >
+                                    <XCircle className="w-4 h-4" />
+                                    {verifyGoalMutation.isPending ? 'Processing...' : 'Reject'}
+                                  </Button>
+                                  <Button
+                                    onClick={() => verifyGoalMutation.mutate({
+                                      goalId: selectedGoal.id,
+                                      approved: true,
+                                      comment: reviewComment
+                                    })}
+                                    disabled={verifyGoalMutation.isPending}
+                                    className="flex items-center gap-2"
+                                  >
+                                    <CheckCircle2 className="w-4 h-4" />
+                                    {verifyGoalMutation.isPending ? 'Processing...' : 'Approve'}
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          ) : null;
+                        })()}
+                      </CardContent>
+                    </Card>
+                  )}
+
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     {othersGoalsInReview.map((goal: any) => (
                       <Card key={goal.id} className="hover:shadow-lg transition-shadow border-yellow-500/50">
@@ -635,9 +788,16 @@ export default function Goals() {
                                 size="sm"
                                 variant="outline"
                                 className="w-full"
-                                onClick={() => navigate('/dashboard/voting')}
+                                onClick={() => {
+                                  setShowReviewPanel(true);
+                                  setSelectedReviewGoalId(goal.id);
+                                  // Scroll to review panel
+                                  setTimeout(() => {
+                                    document.getElementById('review-goal-select')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                  }, 100);
+                                }}
                               >
-                                Review on Voting Page
+                                Review This Goal
                               </Button>
                             </div>
                           </div>
